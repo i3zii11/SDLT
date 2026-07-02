@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>تسجيل الدخول - SDLT</title>
+</head>
+<body class="bg-[#121212] min-h-screen flex items-center justify-center p-4">
+    <div class="bg-[#181818] border border-slate-800 p-8 rounded-2xl w-full max-w-sm shadow-2xl">
+        <div class="text-center mb-8">
+            <h2 class="text-2xl font-bold text-white mb-2">تسجيل الدخول</h2>
+            <p class="text-slate-500 text-sm">أهلاً بك في نظام SDLT</p>
+        </div>
+        <div class="space-y-4">
+            <input type="email" id="email" placeholder="البريد الإلكتروني" class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-3 text-sm text-slate-200 outline-none focus:border-emerald-500">
+            <input type="password" id="password" placeholder="كلمة المرور" class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-3 text-sm text-slate-200 outline-none focus:border-emerald-500">
+            <button onclick="signIn()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-[#121212] font-bold py-3 rounded-lg transition-all">دخول</button>
+        </div>
+        <p class="text-center text-slate-500 text-xs mt-6">ليس لديك حساب؟ <a href="register.html" class="text-emerald-500 hover:underline font-bold">إنشاء حساب</a></p>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+    <script>
+        async function signIn() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    // 1. تسجيل الدخول
+    const { data, error } = await db.auth.signInWithPassword({ email, password });
+    
+    if (error) {
+        alert("خطأ في الدخول: " + error.message);
+        return;
+    }
+
+    // 2. فحص الحالة قبل أن نسمح له بمغادرة صفحة تسجيل الدخول
+    const { data: profile } = await db
+        .from('profiles')
+        .select('status')
+        .eq('id', data.user.id)
+        .single();
+
+    if (profile && profile.status === 'pending') {
+        // إذا حسابه معلق، نعطيه التنبيه هنا ونفصل جلسته بدون ما يشوف الداشبورد
+        alert("حسابك قيد المراجعة، يرجى انتظار تفعيل الأدمن.");
+        await db.auth.signOut();
+        return; // نوقف الكود هنا عشان يبقى في صفحة الدخول
+    }
+
+    // 3. إذا كان مفعل (active)، ننقله للداشبورد
+    window.location.href = 'index.html';
+}
+    </script>
+</body>
+</html>

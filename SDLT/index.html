@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <script>
+        async function checkAuthAndRole() {
+    const { data: { user } } = await db.auth.getUser();
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    const { data: profile } = await db.from('profiles').select('role, status').eq('id', user.id).single();
+
+    if (profile.status !== 'active') {
+        alert("حسابك بانتظار تفعيل الأدمن.");
+        db.auth.signOut();
+        window.location.href = 'login.html';
+    } else {
+        // إذا كان مفعل، وجهه حسب دوره
+        if (profile.role === 'دكتور') { /* ... */ }
+    }
+}
+        window.onload = async () => {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html';
+    } else {
+        // يمكنك هنا جلب الـ role من جدول profiles والتحكم في إظهار الأزرار
+    }
+};
+    // التأكد من وجود جلسة (Session) فعالة
+    (async () => {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) {
+            window.location.href = 'login.html'; // إذا لم يكن مسجلاً، أعده لصفحة الدخول
+        }
+    })();
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDLT - لوحة التحكم التشغيلية</title>
+    <!-- استدعاء Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex">
+
+    <!-- القائمة الجانبية الموحدة (Sidebar) -->
+    <aside class="w-64 bg-slate-950 border-l border-slate-800 p-6 flex flex-col justify-between shrink-0">
+        <div>
+            <!-- شعار النظام الجديد -->
+            <div class="flex items-center gap-2 mb-8">
+                <span class="bg-emerald-500 text-slate-950 font-bold px-3 py-1 rounded-md text-lg">S</span>
+                <span class="font-bold text-xl text-white tracking-wide">SDLT</span>
+            </div>
+
+
+
+            <!-- الروابط والتنقل بين ملفات القوائم -->
+            <nav class="space-y-1 text-sm">
+                <a href="index.html" class="block bg-slate-900 text-emerald-400 font-medium px-4 py-2.5 rounded-xl border border-slate-800/60"> <i class="fa-solid fa-chart-simple ..."></i> <span>📊 لوحة التحكم</span></a>
+                <a href="routes.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⛓️ مصمم المسارات</a>
+                <a href="branches.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏢 الفروع والمخازن</a>
+                <a href="orders.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📦 الطلبات والتتبع</a>
+                <a href="clinics.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏥 العيادات والأطباء</a>
+                <a href="products.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">💎 المنتجات والتركيبات</a>
+                <a href="reports.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📈 التقارير والتحليلات</a>
+                <a href="admin.html" class="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition"><i class="fa-solid fa-users-gear ..."></i><span>✅ تفعيل الحسابات </span></a>
+                <div class="space-y-1" id="adminMenuContainer">
+    <button onclick="toggleDropdown('usersDropdown', 'usersArrow')" class="w-full flex items-center justify-between p-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition text-sm border border-transparent hover:border-slate-700">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-user-shield w-5 text-center text-slate-400"></i>
+            <span> 👥 المستخدمين </span>
+        </div>
+        <i id="usersArrow" class="fa-solid fa-chevron-left text-[10px] transition-transform duration-300"></i>
+    </button>
+
+    <div id="usersDropdown" class="hidden flex-col gap-3 pr-9 py-2 relative">
+        <div class="absolute right-[22px] top-0 bottom-4 w-px bg-slate-700"></div>
+
+        <a href="users.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            المستخدمين
+        </a>
+
+        <a href="roles.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            الأدوار والصلاحيات
+        </a>
+
+        <a href="permissions.html" class="relative text-emerald-400 hover:text-emerald-300 transition text-sm flex items-center font-bold">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-emerald-500 border-2 border-[#111827] shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+            الصلاحيات
+        </a>
+    </div>
+</div>
+
+
+
+
+<script>
+    // دالة فتح وإغلاق القائمة المنسدلة
+    function toggleDropdown(dropdownId, arrowId) {
+        const dropdown = document.getElementById(dropdownId);
+        const arrow = document.getElementById(arrowId);
+        
+        if (dropdown.classList.contains('hidden')) {
+            dropdown.classList.remove('hidden');
+            dropdown.classList.add('flex');
+            arrow.style.transform = 'rotate(-90deg)'; // تدوير السهم للأسفل
+        } else {
+            dropdown.classList.add('hidden');
+            dropdown.classList.remove('flex');
+            arrow.style.transform = 'rotate(0deg)'; // إعادة السهم
+        }
+    }
+</script>
+
+<div class="space-y-1">
+    <button onclick="toggleSidebarMenu('productsMenu', 'productsArrow')" 
+            class="w-full flex items-center justify-between p-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition text-sm">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-gem w-5 text-center"></i>
+            <span>المنتجات</span>
+        </div>
+        <i id="productsArrow" class="fa-solid fa-chevron-left text-[10px] transition-transform duration-300"></i>
+    </button>
+
+    <div id="productsMenu" class="hidden flex-col gap-1 pr-9 py-1 relative">
+        <div class="absolute right-[22px] top-0 bottom-4 w-px bg-slate-700"></div>
+
+        <a href="product-categories.html" class="relative text-slate-400 hover:text-white transition text-sm py-2 px-3 rounded-lg hover:bg-slate-800/50">
+            فئات المنتجات
+        </a>
+        <a href="products.html" class="relative text-slate-400 hover:text-white transition text-sm py-2 px-3 rounded-lg hover:bg-slate-800/50">
+            قائمة المنتجات
+        </a>
+    </div>
+</div>
+
+<script>
+    function toggleSidebarMenu(menuId, arrowId) {
+        const menu = document.getElementById(menuId);
+        const arrow = document.getElementById(arrowId);
+        menu.classList.toggle('hidden');
+        menu.classList.toggle('flex');
+        arrow.style.transform = menu.classList.contains('hidden') ? 'rotate(0deg)' : 'rotate(-90deg)';
+    }
+</script>
+
+
+                <a href="settings.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⚙️ إعدادات النظام</a>
+                <a href="#" onclick="logoutUser(event)" class="flex items-center gap-3 p-3 mt-4 text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition text-sm font-bold"><i class="fa-solid fa-arrow-right-from-bracket w-5 text-center"></i> <span>تسجيل الخروج</span></a>
+            </nav>
+            
+        </div>
+        <div class="text-xs text-slate-500 border-t border-slate-800 pt-4">
+            المستخدم النشط: <span class="text-slate-300 font-medium">عبدالعزيز الفيفي</span>
+        </div>
+    </aside>
+
+    <!-- المحتوى الرئيسي الداخلي -->
+    <main class="flex-1 p-8 overflow-y-auto h-screen">
+        <!-- الهيدر العلوي -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-white">لوحة التحكم الإحصائية</h1>
+                <p class="text-slate-400 text-sm">مراقبة حية لمؤشرات إنتاج المعمل واتفاقيات مستوى الخدمة SLA</p>
+            </div>
+            <button class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-500/10">
+                + تسجيل طلب جديد
+            </button>
+        </header>
+
+        <!-- شبكة بطاقات الإحصائيات (المستنسخة من نظام المعمل القديم) -->
+        <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <!-- بطاقة 1 -->
+            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between min-h-[120px]">
+                <span class="text-xs text-slate-400 font-medium">خارج SLA الآن</span>
+                <div class="flex justify-between items-baseline mt-2">
+                    <span id="stat-outside-sla" class="text-3xl font-bold text-rose-500 font-mono">0</span>
+                    <span class="text-[10px] bg-rose-950/50 text-rose-400 border border-rose-900 px-2 py-0.5 rounded-full">لا توجد حالات نشطة</span>
+                </div>
+            </div>
+            <!-- بطاقة 2 -->
+            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between min-h-[120px]">
+                <span class="text-xs text-slate-400 font-medium">نسبة خارج SLA</span>
+                <div class="flex justify-between items-baseline mt-2">
+                    <span id="stat-sla-percentage" class="text-3xl font-bold text-white font-mono">0%</span>
+                    <span class="text-emerald-400 text-xs">🟢 ممتاز</span>
+                </div>
+            </div>
+            <!-- بطاقة 3 -->
+            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between min-h-[120px]">
+                <span class="text-xs text-slate-400 font-medium">أقدم متجاوز</span>
+                <div class="flex justify-between items-baseline mt-2">
+                    <span id="stat-oldest-override" class="text-3xl font-bold text-white font-mono">0 <span class="text-sm font-sans text-slate-500">دقيقة</span></span>
+                    <span class="text-slate-500 text-xs">أطول تأخر عن SLA</span>
+                </div>
+            </div>
+            <!-- بطاقة 4 -->
+            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between min-h-[120px]">
+                <span class="text-xs text-slate-400 font-medium">قريب من التجاوز</span>
+                <div class="flex justify-between items-baseline mt-2">
+                    <span id="stat-near-override" class="text-3xl font-bold text-amber-500 font-mono">0</span>
+                    <span class="text-[10px] text-slate-400">بلغوا 80% من الوقت</span>
+                </div>
+            </div>
+            <!-- بطاقة 5 -->
+            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between min-h-[120px]">
+                <span class="text-xs text-slate-400 font-medium">طلبات جديدة اليوم</span>
+                <div class="flex justify-between items-baseline mt-2">
+                    <span id="stat-today-orders" class="text-3xl font-bold text-emerald-400 font-mono">0</span>
+                    <span class="text-slate-500 text-xs">كل المسجلة اليوم</span>
+                </div>
+            </div>
+            <!-- بطاقة 6 -->
+            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between min-h-[120px]">
+                <span class="text-xs text-slate-400 font-medium">طلبات قيد التنفيذ</span>
+                <div class="flex justify-between items-baseline mt-2">
+                    <span id="stat-pending-orders" class="text-3xl font-bold text-white font-mono">0</span>
+                    <span class="text-slate-500 text-xs">إجمالي لم يكتمل بعد</span>
+                </div>
+            </div>
+            <!-- بطاقة 7 -->
+            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between min-h-[120px]">
+                <span class="text-xs text-slate-400 font-medium">طلبات متأخرة التسليم</span>
+                <div class="flex justify-between items-baseline mt-2">
+                    <span id="stat-delayed-orders" class="text-3xl font-bold text-rose-400 font-mono">0</span>
+                    <span class="text-rose-500 text-xs">تجاوزت الموعد</span>
+                </div>
+            </div>
+            <!-- بطاقة 8 -->
+            <div class="bg-slate-950 border border-slate-800 p-5 rounded-2xl flex flex-col justify-between min-h-[120px]">
+                <span class="text-xs text-slate-400 font-medium">إجمالي الطلبات (الشهر الحالي)</span>
+                <div class="flex justify-between items-baseline mt-2">
+                    <span id="stat-total-orders" class="text-3xl font-bold text-white font-mono">0</span>
+                    <span class="text-slate-500 text-xs font-mono">منها 0 مرتجع</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- جدول خط الإنتاج الفعلي وتتبع الحالات -->
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div class="p-5 border-b border-slate-800 bg-slate-900/30 flex justify-between items-center">
+                <h3 class="font-bold text-white">تتبع الطلبات    </h3>
+                <span class="bg-emerald-950 text-emerald-400 border border-emerald-800 text-xs px-2.5 py-1 rounded-full">تحديث سحابي فوري</span>
+            </div>
+            
+            <table class="w-full text-right border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-800 bg-slate-900/50 text-slate-400 text-sm">
+                        <th class="p-4">رقم الطلب</th>
+                        <th class="p-4">العيادة والطبيب</th>
+                        <th class="p-4">نوع التركيبة</th>
+                        <th class="p-4">مرحلة المسار</th>
+                        <th class="p-4">الفني المستلم</th>
+                        <th class="p-4 text-center">الإجراء التشغيلي</th>
+                    </tr>
+                </thead>
+                <tbody id="ticketsTableBody" class="text-sm divide-y divide-slate-800/50">
+                    <!-- جلب البيانات حياً من سوبابيز عبر الجافاسكربت -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- استدعاء سوبابيز أولاً ثم ملف الأكواد والتربيط الحركي -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+</body>
+</html>

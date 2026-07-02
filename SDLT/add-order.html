@@ -1,0 +1,782 @@
+
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+<head>
+    
+    <script>
+    // التأكد من وجود جلسة (Session) فعالة
+    (async () => {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) {
+            window.location.href = 'login.html'; // إذا لم يكن مسجلاً، أعده لصفحة الدخول
+        }
+    })();
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDLT - إضافة طلب جديد</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        /* زر الأولوية النشط */
+        .priority-btn.active {
+            background: #10b981;
+            color: #0f172a;
+            border-color: #10b981;
+            font-weight: bold;
+        }
+
+        /* منطقة رفع الملفات عند السحب */
+        .drop-zone.dragover {
+            border-color: #10b981;
+            background: rgba(16,185,129,0.05);
+        }
+
+        /* بلوك التاريخ المختار */
+        .date-day-btn.selected {
+            border-color: #10b981;
+            background: rgba(16,185,129,0.12);
+        }
+        .date-day-btn.selected .day-num {
+            color: #10b981;
+        }
+    </style>
+</head>
+<body class="bg-[#121212] text-slate-200 font-sans min-h-screen">
+
+    <!-- ══════════════════════════════════════
+         الهيدر الثابت في الأعلى
+    ══════════════════════════════════════ -->
+    <header class="bg-[#181818] border-b border-slate-800 p-4 sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto flex justify-between items-center">
+            <div>
+                <div class="text-xs text-slate-500 flex items-center gap-1.5 mb-1">
+                    <a href="orders.html" class="hover:text-slate-300">الطلبات</a>
+                    <i class="fa-solid fa-chevron-left text-[9px]"></i>
+                    <span class="text-slate-400">إضافة</span>
+                </div>
+                <h1 class="text-lg font-bold text-white">إضافة طلب جديد</h1>
+            </div>
+            <a href="orders.html" class="text-slate-400 hover:text-white transition flex items-center gap-2 text-sm">
+                <i class="fa-solid fa-arrow-right"></i> رجوع
+            </a>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto p-6 mt-4">
+
+        <!-- ══════════════════════════════════════
+             مؤشر الخطوات (Stepper)
+        ══════════════════════════════════════ -->
+        <div class="flex justify-between items-center mb-10 relative">
+            <div class="absolute left-0 right-0 top-5 h-0.5 bg-slate-800 -z-10"></div>
+
+            <div class="flex flex-col items-center gap-2 bg-[#121212] px-4 step-indicator" id="ind-1">
+                <div class="w-10 h-10 rounded-full bg-emerald-500 text-[#121212] flex items-center justify-center font-bold border-4 border-[#121212]">
+                    <i class="fa-solid fa-user-group"></i>
+                </div>
+                <span class="text-xs font-bold text-emerald-500">البيانات الأساسية</span>
+            </div>
+
+            <div class="flex flex-col items-center gap-2 bg-[#121212] px-4 step-indicator" id="ind-2">
+                <div class="w-10 h-10 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center font-bold border-4 border-[#121212]">
+                    <i class="fa-solid fa-flask"></i>
+                </div>
+                <span class="text-xs font-bold text-slate-500">تصميم التركيبة</span>
+            </div>
+
+            <div class="flex flex-col items-center gap-2 bg-[#121212] px-4 step-indicator" id="ind-3">
+                <div class="w-10 h-10 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center font-bold border-4 border-[#121212]">
+                    <i class="fa-solid fa-paperclip"></i>
+                </div>
+                <span class="text-xs font-bold text-slate-500">المرفقات</span>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             الخطوة 1: البيانات الأساسية
+        ══════════════════════════════════════ -->
+        <section id="step-1" class="step-section">
+
+            <!-- الفرع والعيادة والطبيب -->
+            <div class="bg-[#181818] border border-slate-800 rounded-xl p-6 mb-6">
+                <h3 class="text-white font-bold mb-4 border-b border-slate-800 pb-2 text-sm">الفرع والعيادة والطبيب</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">الفرع <span class="text-rose-500">*</span></label>
+                        <select id="orderBranch" onchange="onBranchChange()" class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                            <option value="">اختر</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">العيادة <span class="text-rose-500">*</span></label>
+                        <select id="orderClinic" onchange="onClinicChange()" class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                            <option value="">اختر</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">الطبيب <span class="text-rose-500">*</span></label>
+                        <select id="orderDoctor" class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                            <option value="">اختر</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">مسار العمل <span class="text-rose-500">*</span></label>
+                        <select id="orderWorkflow" class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                            <option value="">اختر</option>
+                        </select>
+                        <p class="text-[10px] text-slate-500 mt-1">يحدد هذا الخيار المراحل التي سيمر بها الطلب</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ملف المريض -->
+            <div class="bg-[#181818] border border-slate-800 rounded-xl p-6 mb-6">
+                <h3 class="text-white font-bold mb-4 border-b border-slate-800 pb-2 text-sm">ملف المريض</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="md:col-span-2">
+                        <label class="text-xs text-slate-400 block mb-1">اسم المريض <span class="text-rose-500">*</span></label>
+                        <input type="text" id="patientName" placeholder="اكتب اسم المريض"
+                               class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">رقم التواصل</label>
+                        <input type="text" id="patientPhone" placeholder="05xxxxxxxx"
+                               class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">الجنس</label>
+                            <select id="patientGender" class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 outline-none">
+                                <option value="">اختر</option>
+                                <option value="ذكر">ذكر</option>
+                                <option value="أنثى">أنثى</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">العمر</label>
+                            <input type="number" id="patientAge" placeholder="25" min="1" max="120"
+                                   class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 outline-none">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- تفاصيل التسليم -->
+            <div class="bg-[#181818] border border-slate-800 rounded-xl p-6 mb-6">
+                <h3 class="text-white font-bold mb-4 border-b border-slate-800 pb-2 text-sm">تفاصيل التسليم</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    <!-- ✅ تعديل: باكر التاريخ (7 بلوكات من اليوم) بدل input -->
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-2">تاريخ التسليم <span class="text-rose-500">*</span></label>
+                        <div id="datePicker" class="flex gap-2 overflow-x-auto pb-1"></div>
+                        <!-- حقل مخفي يُخزّن القيمة المختارة ليُقرأ عند الحفظ -->
+                        <input type="hidden" id="deliveryDate">
+                        <p class="text-[10px] text-slate-500 mt-1.5">اختر أحد الأيام السبعة القادمة</p>
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-2">الأولوية</label>
+                        <div class="flex gap-1 bg-[#1e1e1e] border border-slate-700 rounded-lg p-1">
+                            <button type="button" onclick="setPriority('منخفض', this)" class="priority-btn flex-1 text-xs py-2 rounded-md border border-transparent text-slate-400 transition">منخفض</button>
+                            <button type="button" onclick="setPriority('عادي', this)"   class="priority-btn active flex-1 text-xs py-2 rounded-md border border-transparent transition">عادي</button>
+                            <button type="button" onclick="setPriority('عالي', this)"   class="priority-btn flex-1 text-xs py-2 rounded-md border border-transparent text-slate-400 transition">عالي</button>
+                            <button type="button" onclick="setPriority('عاجل', this)"   class="priority-btn flex-1 text-xs py-2 rounded-md border border-transparent text-slate-400 transition">عاجل</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="goToStep(2)" class="bg-emerald-500 hover:bg-emerald-400 text-[#121212] font-bold px-8 py-2.5 rounded-xl text-sm transition-all shadow-lg">
+                    الخطوة التالية <i class="fa-solid fa-chevron-left mr-1"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════
+             الخطوة 2: تصميم التركيبة
+        ══════════════════════════════════════ -->
+        <section id="step-2" class="step-section hidden">
+
+            <!-- اختيار المنتج (حقول نصية حرة) -->
+            <div class="bg-[#181818] border border-slate-800 rounded-xl p-6 mb-6">
+                <h3 class="text-white font-bold mb-4 border-b border-slate-800 pb-2 text-sm">اختيار المنتج</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">فئة المنتج <span class="text-rose-500">*</span></label>
+                        <input type="text" id="productCategory" placeholder="مثال: زيركون، إيماكس..."
+                               class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">المنتج <span class="text-rose-500">*</span></label>
+                        <input type="text" id="productName" placeholder="مثال: Zirconia High Translucency"
+                               class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">اللون</label>
+                        <input type="text" id="orderShade" placeholder="مثال: A1، A2، B1..."
+                               class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <!-- تحديد الأسنان والتصميم -->
+            <div class="bg-[#181818] border border-slate-800 rounded-xl p-6 mb-6">
+                <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-2">
+                    <h3 class="text-white font-bold text-sm">تحديد الأسنان والتصميم</h3>
+                    <span class="text-xs text-slate-500">الأسنان المختارة: <span id="toothCount" class="text-emerald-500 font-bold">0</span></span>
+                </div>
+
+                <!-- مخطط الأسنان -->
+                <div class="flex flex-col items-center gap-2 mb-8 bg-[#1e1e1e] p-4 rounded-xl border border-slate-700 overflow-x-auto">
+                    <div class="flex gap-1 border-b border-slate-700 pb-2">
+                        <div class="flex gap-1 pr-4 border-r border-slate-700" id="teeth-upper-right"></div>
+                        <div class="flex gap-1 pl-4" id="teeth-upper-left"></div>
+                    </div>
+                    <div class="flex gap-1 pt-2">
+                        <div class="flex gap-1 pr-4 border-r border-slate-700" id="teeth-lower-right"></div>
+                        <div class="flex gap-1 pl-4" id="teeth-lower-left"></div>
+                    </div>
+                    <div class="text-[10px] text-slate-500 mt-2 w-full flex justify-between items-center">
+                        <button type="button" onclick="clearTeeth()" class="border border-slate-700 px-2 py-1 rounded hover:bg-slate-800 transition">مسح الكل</button>
+                        <span>اضغط على رقم السن لتحديده واختياره للتركيبة.</span>
+                    </div>
+                </div>
+
+                <!-- نوع المارجن والبونتك -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+
+                    <!-- ✅ نوع المارجن + خيار أخرى -->
+                    <div>
+                        <h4 class="text-xs text-slate-400 mb-3">نوع المارجن</h4>
+                        <div class="space-y-2">
+                            <div onclick="selectCard(this, 'margin', 'شولدر')" class="margin-card cursor-pointer border border-slate-700 bg-[#1e1e1e] p-3 rounded-xl flex justify-between items-center hover:border-emerald-500 transition">
+                                <div class="text-right"><div class="text-sm text-white">شولدر</div><div class="text-[10px] text-slate-500">زاوية قائمة</div></div>
+                                <div class="text-xs text-slate-600 font-bold font-mono">_|</div>
+                            </div>
+                            <div onclick="selectCard(this, 'margin', 'شامفر عميق')" class="margin-card cursor-pointer border border-slate-700 bg-[#1e1e1e] p-3 rounded-xl flex justify-between items-center hover:border-emerald-500 transition">
+                                <div class="text-right"><div class="text-sm text-white">شامفر عميق</div><div class="text-[10px] text-slate-500">انتقال ناعم</div></div>
+                                <div class="text-xs text-slate-600 font-bold font-mono">/</div>
+                            </div>
+                            <div onclick="selectCard(this, 'margin', 'نايف إيدج')" class="margin-card cursor-pointer border border-slate-700 bg-[#1e1e1e] p-3 rounded-xl flex justify-between items-center hover:border-emerald-500 transition">
+                                <div class="text-right"><div class="text-sm text-white">نايف إيدج</div><div class="text-[10px] text-slate-500">حافة رفيعة</div></div>
+                                <div class="text-xs text-slate-600 font-bold font-mono">\</div>
+                            </div>
+                            <!-- ✅ خيار أخرى للمارجن -->
+                            <div onclick="selectCard(this, 'margin', '__other__')" class="margin-card cursor-pointer border border-slate-700 bg-[#1e1e1e] p-3 rounded-xl flex justify-between items-center hover:border-emerald-500 transition">
+                                <div class="text-right"><div class="text-sm text-white">أخرى</div><div class="text-[10px] text-slate-500">اكتب نوعاً مخصصاً</div></div>
+                                <i class="fa-solid fa-pen text-slate-600 text-xs"></i>
+                            </div>
+                            <!-- حقل نص مخفي يظهر عند اختيار "أخرى" -->
+                            <div id="customMarginWrap" class="hidden">
+                                <input type="text" id="customMarginText" placeholder="اكتب نوع المارجن المخصص..."
+                                       class="w-full bg-[#1e1e1e] border border-emerald-500/50 rounded-lg p-2.5 text-sm text-slate-200 outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ✅ نوع البونتك + خيار أخرى -->
+                    <div>
+                        <h4 class="text-xs text-slate-400 mb-3">نوع البونتك</h4>
+                        <div class="space-y-2">
+                            <div onclick="selectCard(this, 'pontic', 'صحي')" class="pontic-card cursor-pointer border border-slate-700 bg-[#1e1e1e] p-3 rounded-xl flex justify-between items-center hover:border-emerald-500 transition">
+                                <div class="text-right"><div class="text-sm text-white">صحي</div><div class="text-[10px] text-slate-500">تنظيف سهل وصحي</div></div>
+                                <div class="w-3 h-3 bg-slate-700 rounded-full"></div>
+                            </div>
+                            <div onclick="selectCard(this, 'pontic', 'ريدج لاب')" class="pontic-card cursor-pointer border border-slate-700 bg-[#1e1e1e] p-3 rounded-xl flex justify-between items-center hover:border-emerald-500 transition">
+                                <div class="text-right"><div class="text-sm text-white">ريدج لاب</div><div class="text-[10px] text-slate-500">تماس كامل وثبات عالي</div></div>
+                                <div class="w-3 h-3 bg-slate-700 rounded-t-full"></div>
+                            </div>
+                            <div onclick="selectCard(this, 'pontic', 'ريدج لاب معدل')" class="pontic-card cursor-pointer border border-slate-700 bg-[#1e1e1e] p-3 rounded-xl flex justify-between items-center hover:border-emerald-500 transition">
+                                <div class="text-right"><div class="text-sm text-white">ريدج لاب معدل</div><div class="text-[10px] text-slate-500">توازن بين الجمال والصحة</div></div>
+                                <div class="w-3 h-3 bg-slate-700 rounded-t-lg"></div>
+                            </div>
+                            <div onclick="selectCard(this, 'pontic', 'أوفيت')" class="pontic-card cursor-pointer border border-slate-700 bg-[#1e1e1e] p-3 rounded-xl flex justify-between items-center hover:border-emerald-500 transition">
+                                <div class="text-right"><div class="text-sm text-white">أوفيت</div><div class="text-[10px] text-slate-500">شكل بيضاوي جمالي</div></div>
+                                <div class="w-4 h-3 bg-slate-700 rounded-full"></div>
+                            </div>
+                            <!-- ✅ خيار أخرى للبونتك -->
+                            <div onclick="selectCard(this, 'pontic', '__other__')" class="pontic-card cursor-pointer border border-slate-700 bg-[#1e1e1e] p-3 rounded-xl flex justify-between items-center hover:border-emerald-500 transition">
+                                <div class="text-right"><div class="text-sm text-white">أخرى</div><div class="text-[10px] text-slate-500">اكتب نوعاً مخصصاً</div></div>
+                                <i class="fa-solid fa-pen text-slate-600 text-xs"></i>
+                            </div>
+                            <!-- حقل نص مخفي يظهر عند اختيار "أخرى" -->
+                            <div id="customPonticWrap" class="hidden">
+                                <input type="text" id="customPonticText" placeholder="اكتب نوع البونتك المخصص..."
+                                       class="w-full bg-[#1e1e1e] border border-emerald-500/50 rounded-lg p-2.5 text-sm text-slate-200 outline-none focus:border-emerald-500">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ملاحظات الفني -->
+                <div class="mt-6">
+                    <label class="text-xs text-slate-400 block mb-1">ملاحظات الفني</label>
+                    <input type="text" id="technicianNotes" placeholder="ملاحظات خاصة بالتصنيع والتصميم..."
+                           class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="goToStep(1)" class="bg-[#1e1e1e] border border-slate-700 text-slate-300 px-6 py-2.5 rounded-xl text-sm hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-chevron-right ml-1"></i> الخطوة السابقة
+                </button>
+                <button onclick="goToStep(3)" class="bg-emerald-500 hover:bg-emerald-400 text-[#121212] font-bold px-8 py-2.5 rounded-xl text-sm transition-all shadow-lg">
+                    الخطوة التالية <i class="fa-solid fa-chevron-left mr-1"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- ══════════════════════════════════════
+             الخطوة 3: المرفقات
+        ══════════════════════════════════════ -->
+        <section id="step-3" class="step-section hidden">
+
+            <div class="bg-[#181818] border border-slate-800 rounded-xl p-6 mb-6">
+                <div class="mb-6">
+                    <label class="text-xs text-slate-400 block mb-1">ملاحظات عامة على الطلب</label>
+                    <textarea id="orderNotes" rows="4" placeholder="أي ملاحظات إضافية من الطبيب..."
+                              class="w-full bg-[#1e1e1e] border border-slate-700 rounded-lg p-3 text-sm text-slate-200 focus:border-emerald-500 outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-2">رفع ملفات</label>
+                    <div id="dropZone" class="drop-zone border-2 border-dashed border-slate-700 bg-[#1e1e1e] rounded-xl p-8 flex flex-col items-center justify-center text-slate-500 hover:border-emerald-500 transition cursor-pointer">
+                        <i class="fa-solid fa-cloud-arrow-up text-2xl mb-2"></i>
+                        <span class="text-xs text-center">اسحب وادرج ملفاتك أو <span class="text-emerald-500 font-bold">تصفح</span></span>
+                        <span class="text-[10px] text-slate-600 mt-1">STL, صور, PDF — حتى 10 م.ب لكل ملف</span>
+                        <input type="file" id="fileInput" multiple accept=".stl,.jpg,.jpeg,.png,.pdf,.zip" class="hidden">
+                    </div>
+                    <ul id="fileList" class="mt-3 space-y-1 text-xs text-slate-400"></ul>
+                </div>
+            </div>
+
+            <div class="flex justify-between">
+                <button onclick="goToStep(2)" class="bg-[#1e1e1e] border border-slate-700 text-slate-300 px-6 py-2.5 rounded-xl text-sm hover:bg-slate-800 transition">
+                    <i class="fa-solid fa-chevron-right ml-1"></i> الخطوة السابقة
+                </button>
+                <div class="flex gap-3">
+                    <a href="orders.html" class="bg-slate-800 border border-slate-700 text-slate-400 px-6 py-2.5 rounded-xl text-sm hover:text-white transition">إلغاء</a>
+                    <button id="submitBtn" onclick="submitOrder()"
+                            class="bg-emerald-500 hover:bg-emerald-400 text-[#121212] font-bold px-10 py-2.5 rounded-xl text-sm transition-all shadow-lg flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> إضافة
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ══════════════════════════════════════
+         JavaScript — ربط Supabase + منطق الصفحة
+    ══════════════════════════════════════ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ── إعداد Supabase ──────────────────────────────────
+        const SUPABASE_URL  = "https://pdonlejkordqblytufrf.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_GUjTm4RZk7u-GuzEjZm-Mg_neclTR6P";
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // ── الحالة العامة ────────────────────────────────────
+        let branchesData  = [];
+        let clinicsData   = [];
+        let doctorsData   = [];
+        let workflowsData = [];
+
+        let selectedTeeth    = new Set();
+        let selectedMargin   = 'غير محدد';
+        let selectedPontic   = 'غير محدد';
+        let selectedPriority = 'عادي';
+        let attachedFiles    = [];
+
+        // ══════════════════════════════════════════════════════
+        // التهيئة عند تحميل الصفحة
+        // ══════════════════════════════════════════════════════
+        window.onload = async () => {
+            buildToothChart();
+            buildDatePicker();   // ✅ باكر الأيام السبعة
+            setupFileDrop();
+            await loadFormData();
+            const { data: { session } } = await db.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html';
+    } else {
+        // يمكنك هنا جلب الـ role من جدول profiles والتحكم في إظهار الأزرار
+    }
+        };
+
+        // ══════════════════════════════════════════════════════
+        // ✅ باكر التاريخ — 7 بلوكات من اليوم
+        // ══════════════════════════════════════════════════════
+        function buildDatePicker() {
+            const container = document.getElementById('datePicker');
+            const arabicDays   = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+            const arabicMonths = ['يناير','فبراير','مارس','أبريل','مايو','يونيو',
+                                  'يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+
+            for (let i = 0; i < 7; i++) {
+                const d = new Date();
+                d.setDate(d.getDate() + i);
+
+                const isoDate   = d.toISOString().split('T')[0];
+                const dayName   = arabicDays[d.getDay()];
+                const dayNum    = d.getDate();
+                const monthName = arabicMonths[d.getMonth()];
+                const isToday   = i === 0;
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.dataset.date = isoDate;
+                btn.className = 'date-day-btn flex-1 min-w-[70px] flex flex-col items-center py-3 px-1 rounded-xl border border-slate-700 bg-[#1e1e1e] hover:border-emerald-500/60 transition text-center cursor-pointer';
+
+                btn.innerHTML = `
+                    <span class="text-[10px] text-slate-500 mb-0.5">${isToday ? 'اليوم' : dayName}</span>
+                    <span class="day-num text-xl font-bold text-white font-mono">${dayNum}</span>
+                    <span class="text-[10px] text-slate-400 mt-0.5">${monthName}</span>
+                `;
+
+                btn.addEventListener('click', () => selectDate(btn, isoDate));
+                container.appendChild(btn);
+            }
+
+            // تحديد اليوم الأول (اليوم) تلقائياً
+            const firstBtn = container.querySelector('.date-day-btn');
+            if (firstBtn) selectDate(firstBtn, firstBtn.dataset.date);
+        }
+
+        // تفعيل البلوك المضغوط وتخزين التاريخ في الحقل المخفي
+        function selectDate(btn, isoDate) {
+            document.querySelectorAll('.date-day-btn').forEach(b => {
+                b.classList.remove('selected');
+                b.querySelector('.day-num').classList.replace('text-emerald-400', 'text-white');
+            });
+            btn.classList.add('selected');
+            btn.querySelector('.day-num').classList.replace('text-white', 'text-emerald-400');
+            document.getElementById('deliveryDate').value = isoDate;
+        }
+
+        // ══════════════════════════════════════════════════════
+        // جلب بيانات الفورم من Supabase (فروع، عيادات، أطباء، مسارات)
+        // ══════════════════════════════════════════════════════
+        async function loadFormData() {
+            try {
+                const [br, cl, dr, wf] = await Promise.all([
+                    db.from('branches').select('*'),
+                    db.from('clinics').select('*'),
+                    db.from('doctors').select('*'),
+                    db.from('route_maps').select('id, name').order('name')
+                ]);
+
+                branchesData  = br.data  || [];
+                clinicsData   = cl.data  || [];
+                doctorsData   = dr.data  || [];
+                workflowsData = wf.data  || [];
+
+                fillSelect('orderBranch',   branchesData,  'id', 'name');
+                fillSelect('orderWorkflow', workflowsData, 'id', 'name');
+                onBranchChange();
+
+            } catch (err) {
+                console.error("خطأ في تحميل بيانات الفورم:", err);
+            }
+        }
+
+        // ── ملء القائمة المنسدلة ──────────────────────────────
+        function fillSelect(id, items, valKey, labelKey, placeholder = 'اختر') {
+            const sel = document.getElementById(id);
+            sel.innerHTML = `<option value="">${placeholder}</option>` +
+                items.map(i => `<option value="${i[valKey]}">${i[labelKey]}</option>`).join('');
+        }
+
+        // ── تصفية العيادات حسب الفرع ──────────────────────────
+        function onBranchChange() {
+            const branchId = document.getElementById('orderBranch').value;
+            const filtered = branchId
+                ? clinicsData.filter(c => String(c.branch_id) === String(branchId))
+                : clinicsData;
+            fillSelect('orderClinic', filtered, 'id', 'name');
+            onClinicChange();
+        }
+
+        // ── تصفية الأطباء حسب العيادة ─────────────────────────
+        function onClinicChange() {
+            const clinicId = document.getElementById('orderClinic').value;
+            const filtered = clinicId
+                ? doctorsData.filter(d => String(d.clinic_id) === String(clinicId))
+                : doctorsData;
+            fillSelect('orderDoctor', filtered, 'id', 'name');
+        }
+
+        // ── نص الخيار المحدد من select ────────────────────────
+        function getSelectedText(selectId) {
+            const sel = document.getElementById(selectId);
+            return sel.options[sel.selectedIndex]?.text || '';
+        }
+
+        // ══════════════════════════════════════════════════════
+        // الأولوية
+        // ══════════════════════════════════════════════════════
+        function setPriority(value, btn) {
+            selectedPriority = value;
+            document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        // ══════════════════════════════════════════════════════
+        // مخطط الأسنان
+        // ══════════════════════════════════════════════════════
+        function buildToothChart() {
+            const btnClass = 'tooth-btn w-8 h-10 border border-slate-600 rounded bg-[#2a2a2a] text-slate-300 text-xs hover:bg-slate-700 transition font-mono';
+            const ranges = [
+                ['teeth-upper-right', 18, 11, -1],
+                ['teeth-upper-left',  21, 28,  1],
+                ['teeth-lower-right', 48, 41, -1],
+                ['teeth-lower-left',  31, 38,  1]
+            ];
+            ranges.forEach(([containerId, from, to, step]) => {
+                const el = document.getElementById(containerId);
+                for (let i = from; step > 0 ? i <= to : i >= to; i += step) {
+                    el.innerHTML += `<button type="button" onclick="toggleTooth(this)" class="${btnClass}">${i}</button>`;
+                }
+            });
+        }
+
+        function toggleTooth(btn) {
+            const num    = btn.innerText;
+            const normal = 'tooth-btn w-8 h-10 border border-slate-600 rounded bg-[#2a2a2a] text-slate-300 text-xs hover:bg-slate-700 transition font-mono';
+            const active = 'tooth-btn w-8 h-10 border border-emerald-400 rounded bg-emerald-500 text-[#121212] text-xs font-bold font-mono transition';
+            if (selectedTeeth.has(num)) { selectedTeeth.delete(num); btn.className = normal; }
+            else                        { selectedTeeth.add(num);    btn.className = active; }
+            document.getElementById('toothCount').innerText = selectedTeeth.size;
+        }
+
+        function clearTeeth() {
+            selectedTeeth.clear();
+            document.querySelectorAll('.tooth-btn').forEach(btn => {
+                btn.className = 'tooth-btn w-8 h-10 border border-slate-600 rounded bg-[#2a2a2a] text-slate-300 text-xs hover:bg-slate-700 transition font-mono';
+            });
+            document.getElementById('toothCount').innerText = '0';
+        }
+
+        // ══════════════════════════════════════════════════════
+        // ✅ اختيار بطاقة المارجن/البونتك مع إظهار "أخرى"
+        // ══════════════════════════════════════════════════════
+        function selectCard(card, type, value) {
+            // إزالة التحديد من كل البطاقات في نفس المجموعة
+            document.querySelectorAll(`.${type}-card`).forEach(c => {
+                c.classList.remove('border-emerald-500', 'bg-emerald-500/10');
+                c.classList.add('border-slate-700', 'bg-[#1e1e1e]');
+            });
+            // تفعيل البطاقة المضغوطة
+            card.classList.remove('border-slate-700', 'bg-[#1e1e1e]');
+            card.classList.add('border-emerald-500', 'bg-emerald-500/10');
+
+            if (type === 'margin') {
+                selectedMargin = value;
+                // إظهار حقل النص فقط عند اختيار "أخرى"
+                document.getElementById('customMarginWrap').classList.toggle('hidden', value !== '__other__');
+                if (value !== '__other__') document.getElementById('customMarginText').value = '';
+            }
+
+            if (type === 'pontic') {
+                selectedPontic = value;
+                document.getElementById('customPonticWrap').classList.toggle('hidden', value !== '__other__');
+                if (value !== '__other__') document.getElementById('customPonticText').value = '';
+            }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // المرفقات
+        // ══════════════════════════════════════════════════════
+        function setupFileDrop() {
+            const zone  = document.getElementById('dropZone');
+            const input = document.getElementById('fileInput');
+            zone.onclick      = () => input.click();
+            input.onchange    = () => addFiles(input.files);
+            zone.ondragover   = e => { e.preventDefault(); zone.classList.add('dragover'); };
+            zone.ondragleave  = () => zone.classList.remove('dragover');
+            zone.ondrop       = e => { e.preventDefault(); zone.classList.remove('dragover'); addFiles(e.dataTransfer.files); };
+        }
+
+        function addFiles(fileList) {
+            for (const f of fileList) {
+                if (f.size > 10 * 1024 * 1024) { alert(`الملف ${f.name} أكبر من 10 م.ب`); continue; }
+                if (!attachedFiles.find(x => x.name === f.name && x.size === f.size)) attachedFiles.push(f);
+            }
+            renderFileList();
+        }
+
+        function renderFileList() {
+            document.getElementById('fileList').innerHTML = attachedFiles.map((f, i) => `
+                <li class="flex justify-between items-center bg-[#1e1e1e] border border-slate-800 rounded-lg px-3 py-2">
+                    <span><i class="fa-solid fa-file ml-2 text-emerald-500"></i>${f.name}
+                    <span class="text-slate-600">(${(f.size/1024).toFixed(0)} KB)</span></span>
+                    <button type="button" onclick="removeFile(${i})" class="text-rose-400 hover:text-rose-300">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </li>
+            `).join('');
+        }
+
+        function removeFile(i) { attachedFiles.splice(i, 1); renderFileList(); }
+
+        // ══════════════════════════════════════════════════════
+        // التحقق والتنقل بين الخطوات
+        // ══════════════════════════════════════════════════════
+        function validateStep(step) {
+            if (step === 1) {
+                if (!document.getElementById('orderBranch').value)   { alert('اختر الفرع');        return false; }
+                if (!document.getElementById('orderClinic').value)   { alert('اختر العيادة');      return false; }
+                if (!document.getElementById('orderDoctor').value)   { alert('اختر الطبيب');       return false; }
+                if (!document.getElementById('orderWorkflow').value) { alert('اختر مسار العمل');   return false; }
+                if (!document.getElementById('patientName').value.trim()) { alert('أدخل اسم المريض'); return false; }
+                if (!document.getElementById('deliveryDate').value)  { alert('حدد تاريخ التسليم'); return false; }
+            }
+            if (step === 2) {
+                if (!document.getElementById('productCategory').value.trim()) { alert('اكتب فئة المنتج'); return false; }
+                if (!document.getElementById('productName').value.trim())     { alert('اكتب اسم المنتج'); return false; }
+            }
+            return true;
+        }
+
+        function goToStep(step) {
+            if (step > 1 && !validateStep(step - 1)) return;
+            document.querySelectorAll('.step-section').forEach(s => s.classList.add('hidden'));
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+            updateStepper(step);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function updateStepper(step) {
+            for (let i = 1; i <= 3; i++) {
+                const ind    = document.getElementById(`ind-${i}`);
+                const circle = ind.querySelector('div');
+                const text   = ind.querySelector('span');
+
+                if (i < step) {
+                    circle.className = 'w-10 h-10 rounded-full bg-emerald-500 text-[#121212] flex items-center justify-center font-bold border-4 border-[#121212]';
+                    circle.innerHTML = '<i class="fa-solid fa-check"></i>';
+                    text.className   = 'text-xs font-bold text-emerald-500';
+                } else if (i === step) {
+                    circle.className = 'w-10 h-10 rounded-full bg-emerald-500 text-[#121212] flex items-center justify-center font-bold border-4 border-[#121212]';
+                    circle.innerHTML = getStepIcon(i);
+                    text.className   = 'text-xs font-bold text-emerald-500';
+                } else {
+                    circle.className = 'w-10 h-10 rounded-full bg-slate-800 text-slate-500 flex items-center justify-center font-bold border-4 border-[#121212]';
+                    circle.innerHTML = getStepIcon(i);
+                    text.className   = 'text-xs font-bold text-slate-500';
+                }
+            }
+        }
+
+        function getStepIcon(n) {
+            return n === 1 ? '<i class="fa-solid fa-user-group"></i>'
+                 : n === 2 ? '<i class="fa-solid fa-flask"></i>'
+                 :            '<i class="fa-solid fa-paperclip"></i>';
+        }
+
+        // ══════════════════════════════════════════════════════
+        // رفع المرفقات إلى Supabase Storage
+        // ══════════════════════════════════════════════════════
+        async function uploadAttachments(orderId) {
+            for (const file of attachedFiles) {
+                const path = `orders/${orderId}/${Date.now()}_${file.name}`;
+                await db.storage.from('order-attachments').upload(path, file);
+            }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // حفظ الطلب في Supabase
+        // ══════════════════════════════════════════════════════
+        async function submitOrder() {
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin ml-1"></i> جاري الحفظ...';
+
+            try {
+                // ── جمع بيانات الخطوة 1 ──
+                const clinicName   = getSelectedText('orderClinic');
+                const doctorName   = getSelectedText('orderDoctor');
+                const branchName   = getSelectedText('orderBranch');
+                const workflowName = getSelectedText('orderWorkflow');
+                const workflowId   = document.getElementById('orderWorkflow').value;
+                const patientName  = document.getElementById('patientName').value.trim();
+                const patientPhone = document.getElementById('patientPhone').value.trim();
+                const patientGender= document.getElementById('patientGender').value;
+                const patientAge   = document.getElementById('patientAge').value;
+                const deliveryDate = document.getElementById('deliveryDate').value;
+
+                // ── جمع بيانات الخطوة 2 ──
+                const category  = document.getElementById('productCategory').value.trim();
+                const product   = document.getElementById('productName').value.trim();
+                const shade     = document.getElementById('orderShade').value.trim();
+                const techNotes = document.getElementById('technicianNotes').value.trim();
+
+                // ✅ قيمة المارجن: إذا "أخرى" اقرأ من حقل النص المخصص
+                const finalMargin = selectedMargin === '__other__'
+                    ? (document.getElementById('customMarginText').value.trim() || 'مخصص')
+                    : selectedMargin;
+
+                // ✅ قيمة البونتك: نفس المنطق
+                const finalPontic = selectedPontic === '__other__'
+                    ? (document.getElementById('customPonticText').value.trim() || 'مخصص')
+                    : selectedPontic;
+
+                const generalNotes = document.getElementById('orderNotes').value.trim();
+                const teeth = Array.from(selectedTeeth).sort((a, b) => Number(a) - Number(b)).join(', ');
+
+                // ── تجميع كل التفاصيل في سلسلة نصية واحدة لحقل restoration_type ──
+                const fullDetails = [
+                    `${category} / ${product}`,
+                    shade          ? `اللون: ${shade}`            : '',
+                    `المريض: ${patientName}`,
+                    patientPhone   ? `الجوال: ${patientPhone}`    : '',
+                    patientGender  ? `الجنس: ${patientGender}`    : '',
+                    patientAge     ? `العمر: ${patientAge}`       : '',
+                    teeth          ? `الأسنان: ${teeth}`          : '',
+                    `مارجن: ${finalMargin}`,
+                    `بونتك: ${finalPontic}`,
+                    `الفرع: ${branchName}`,
+                    `مسار: ${workflowName}`,
+                    `التسليم: ${deliveryDate}`,
+                    `الأولوية: ${selectedPriority}`,
+                    techNotes      ? `ملاحظات فني: ${techNotes}`  : '',
+                    generalNotes   ? `ملاحظات عامة: ${generalNotes}` : '',
+                    attachedFiles.length ? `مرفقات: ${attachedFiles.map(f => f.name).join(', ')}` : ''
+                ].filter(Boolean).join(' | ');
+
+                // ── إدخال الطلب في جدول orders ──
+                const { data, error } = await db.from('orders').insert([{
+                    clinic:           clinicName,
+                    doctor:           doctorName,
+                    restoration_type: fullDetails,
+                    status:           'جديد',
+                    technician:       '-',
+                    route_map_id:     workflowId || null
+                }]).select('id').single();
+
+                if (error) throw error;
+
+                // رفع المرفقات إن وُجدت (اختياري - يكمل حتى لو فشل)
+                if (attachedFiles.length && data?.id) {
+                    try { await uploadAttachments(data.id); } catch (_) { /* bucket قد لا يكون موجوداً بعد */ }
+                }
+
+                alert('✅ تم إضافة الطلب بنجاح!');
+                window.location.href = 'orders.html';
+
+            } catch (err) {
+                console.error("خطأ في حفظ الطلب:", err);
+                alert('حدث خطأ أثناء الحفظ: ' + (err.message || 'تحقق من الاتصال'));
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-plus"></i> إضافة';
+            }
+        }
+    </script>
+</body>
+</html>

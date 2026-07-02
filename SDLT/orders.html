@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <script>
+    // التأكد من وجود جلسة (Session) فعالة
+    (async () => {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) {
+            window.location.href = 'login.html'; // إذا لم يكن مسجلاً، أعده لصفحة الدخول
+        }
+    })();
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDLT - الطلبات والتتبع</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex">
+
+   <!-- القائمة الجانبية الموحدة (Sidebar) -->
+    <aside class="w-64 bg-slate-950 border-l border-slate-800 p-6 flex flex-col justify-between shrink-0">
+        <div>
+            <!-- شعار النظام الجديد -->
+            <div class="flex items-center gap-2 mb-8">
+                <span class="bg-emerald-500 text-slate-950 font-bold px-3 py-1 rounded-md text-lg">S</span>
+                <span class="font-bold text-xl text-white tracking-wide">SDLT</span>
+            </div>
+
+
+
+            <!-- الروابط والتنقل بين ملفات القوائم -->
+            <nav class="space-y-1 text-sm">
+                <a href="index.html" class="block bg-slate-900 text-emerald-400 font-medium px-4 py-2.5 rounded-xl border border-slate-800/60"> <i class="fa-solid fa-chart-simple ..."></i> <span>📊 لوحة التحكم</span></a>
+                <a href="routes.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⛓️ مصمم المسارات</a>
+                <a href="branches.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏢 الفروع والمخازن</a>
+                <a href="orders.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📦 الطلبات والتتبع</a>
+                <a href="clinics.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏥 العيادات والأطباء</a>
+                <a href="products.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">💎 المنتجات والتركيبات</a>
+                <a href="reports.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📈 التقارير والتحليلات</a>
+                <a href="admin.html" class="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition"><i class="fa-solid fa-users-gear ..."></i><span> تفعيل الحسابات </span></a>
+                <div class="space-y-1" id="adminMenuContainer">
+    <button onclick="toggleDropdown('usersDropdown', 'usersArrow')" class="w-full flex items-center justify-between p-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition text-sm border border-transparent hover:border-slate-700">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-user-shield w-5 text-center text-slate-400"></i>
+            <span>  المستخدمين </span>
+        </div>
+        <i id="usersArrow" class="fa-solid fa-chevron-left text-[10px] transition-transform duration-300"></i>
+    </button>
+
+    <div id="usersDropdown" class="hidden flex-col gap-3 pr-9 py-2 relative">
+        <div class="absolute right-[22px] top-0 bottom-4 w-px bg-slate-700"></div>
+
+        <a href="users.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            المستخدمين
+        </a>
+
+        <a href="roles.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            الأدوار والصلاحيات
+        </a>
+
+        <a href="permissions.html" class="relative text-emerald-400 hover:text-emerald-300 transition text-sm flex items-center font-bold">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-emerald-500 border-2 border-[#111827] shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+            الصلاحيات
+        </a>
+    </div>
+</div>
+
+
+
+
+<script>
+    // دالة فتح وإغلاق القائمة المنسدلة
+    function toggleDropdown(dropdownId, arrowId) {
+        const dropdown = document.getElementById(dropdownId);
+        const arrow = document.getElementById(arrowId);
+        
+        if (dropdown.classList.contains('hidden')) {
+            dropdown.classList.remove('hidden');
+            dropdown.classList.add('flex');
+            arrow.style.transform = 'rotate(-90deg)'; // تدوير السهم للأسفل
+        } else {
+            dropdown.classList.add('hidden');
+            dropdown.classList.remove('flex');
+            arrow.style.transform = 'rotate(0deg)'; // إعادة السهم
+        }
+    }
+</script>
+
+
+
+                <a href="settings.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⚙️ إعدادات النظام</a>
+                <a href="#" onclick="logoutUser(event)" class="flex items-center gap-3 p-3 mt-4 text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition text-sm font-bold"><i class="fa-solid fa-arrow-right-from-bracket w-5 text-center"></i> <span>تسجيل الخروج</span></a>
+            </nav>
+            
+        </div>
+        <div class="text-xs text-slate-500 border-t border-slate-800 pt-4">
+            المستخدم النشط: <span class="text-slate-300 font-medium">عبدالعزيز الفيفي</span>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto h-screen">
+        
+        <header class="mb-6 flex justify-between items-center">
+            <div>
+                <div class="text-xs text-slate-500 flex items-center gap-1.5 mb-1 font-medium">
+                    <span>الطلبات</span> <i class="fa-solid fa-chevron-left text-[9px]"></i> <span class="text-slate-400">القائمة</span>
+                </div>
+                <h1 class="text-2xl font-bold text-white">الطلبات</h1>
+            </div>
+            <a href="add-order.html" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-5 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-lg w-fit">
+                <i class="fa-solid fa-plus"></i> إضافة طلب جديد
+            </a>
+        </header>
+
+        <section class="bg-slate-950 border border-slate-800 rounded-2xl p-5 mb-6 shadow-lg">
+            <h2 class="text-white font-bold text-sm mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-satellite-dish text-emerald-500"></i> تتبع مراحل الطلب
+            </h2>
+            <div class="relative">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <i class="fa-solid fa-magnifying-glass text-slate-500"></i>
+                </div>
+                <input type="text" id="trackInput" onkeyup="filterOrders()" placeholder="ابحث برقم الطلب (مثال: 12)، العيادة، الطبيب، أو الفني..." class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl focus:ring-emerald-500 focus:border-emerald-500 block pr-10 p-3 transition-all">
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-slate-950 border border-emerald-500/30 rounded-2xl p-5 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-1 h-full bg-emerald-500"></div>
+                <h3 class="text-slate-400 text-xs font-medium mb-1">طلبات قيد التنفيذ</h3>
+                <div class="text-3xl font-bold text-white mb-2" id="countInProgress">0</div>
+            </div>
+            <div class="bg-slate-950 border border-emerald-500/30 rounded-2xl p-5 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-1 h-full bg-emerald-500"></div>
+                <h3 class="text-slate-400 text-xs font-medium mb-1">طلبات مكتملة</h3>
+                <div class="text-3xl font-bold text-white mb-2" id="countCompleted">0</div>
+            </div>
+            <div class="bg-slate-950 border border-slate-700 rounded-2xl p-5 relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-1 h-full bg-slate-500"></div>
+                <h3 class="text-slate-400 text-xs font-medium mb-1">طلبات جديدة</h3>
+                <div class="text-3xl font-bold text-white mb-2" id="countNew">0</div>
+            </div>
+        </div>
+
+        <section class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+            <div class="p-4 border-b border-slate-800 bg-slate-900/20 flex justify-between items-center">
+                <div class="text-xs font-bold text-white">سجل الطلبات الحالي</div>
+            </div>
+            <table class="w-full text-right border-collapse">
+                <thead>
+                    <tr class="border-b border-slate-800 bg-slate-900/40 text-slate-400 text-xs font-semibold select-none">
+                        <th class="p-4">رقم الطلب</th>
+                        <th class="p-4">العيادة / الطبيب</th>
+                        <th class="p-4">نوع التركيبة</th>
+                        <th class="p-4">الفني المسؤول</th>
+                        <th class="p-4">الحالة</th>
+                        <th class="p-4">العمليات</th>
+                    </tr>
+                </thead>
+                <tbody id="ordersTableBody" class="text-xs divide-y divide-slate-800/60"></tbody>
+            </table>
+        </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        
+
+        async function fetchOrders() {
+            const tbody = document.getElementById('ordersTableBody');
+            const { data: orders, error } = await db.from('orders').select('*').order('id', { ascending: false });
+
+            if (error) { console.error(error); return; }
+
+            let newCount = 0, inProgressCount = 0, completedCount = 0;
+            tbody.innerHTML = '';
+
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-8 text-center text-slate-500">لا توجد طلبات مسجلة حتى الآن.</td></tr>`;
+                document.getElementById('countNew').innerText = 0;
+                document.getElementById('countInProgress').innerText = 0;
+                document.getElementById('countCompleted').innerText = 0;
+                return;
+            }
+
+            orders.forEach(order => {
+                if(order.status === 'جديد') newCount++;
+                if(order.status === 'قيد التنفيذ') inProgressCount++;
+                if(order.status === 'مكتمل') completedCount++;
+
+                let statusStyle = order.status === 'جديد' ? "bg-slate-800 text-slate-300 border-slate-700" :
+                                  order.status === 'قيد التنفيذ' ? "bg-amber-500/10 text-amber-400 border-amber-500/20" :
+                                  "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+
+                tbody.innerHTML += `
+                    <tr class="searchable-row hover:bg-slate-900/30 transition-all border-b border-slate-800/60">
+                        <td class="p-4 font-mono text-emerald-400 font-bold">ORD-${order.id}</td>
+                        <td class="p-4 text-white">
+                            <div>${order.clinic || '-'}</div>
+                            <div class="text-[10px] text-slate-500">${order.doctor || '-'}</div>
+                        </td>
+                        <td class="p-4 text-slate-300">${order.restoration_type || '-'}</td>
+                        <td class="p-4 text-slate-400">${order.technician || '-'}</td>
+                        <td class="p-4"><span class="px-2 py-1 rounded border ${statusStyle}">${order.status || '-'}</span></td>
+                        <td class="p-4">
+                            <button onclick="deleteOrder(${order.id})" class="text-rose-400 hover:text-rose-300 bg-rose-500/10 px-2 py-1 rounded-lg border border-rose-500/10"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('countNew').innerText = newCount;
+            document.getElementById('countInProgress').innerText = inProgressCount;
+            document.getElementById('countCompleted').innerText = completedCount;
+        }
+
+        async function deleteOrder(id) {
+            if (confirm('هل أنت متأكد من الحذف النهائي للطلب؟')) {
+                await db.from('orders').delete().eq('id', id);
+                fetchOrders();
+            }
+        }
+
+        function filterOrders() {
+            let input = document.getElementById('trackInput').value.toLowerCase();
+            let rows = document.getElementsByClassName('searchable-row');
+            
+            for (let row of rows) {
+                if (row.innerText.toLowerCase().includes(input)) row.style.display = "";
+                else row.style.display = "none";
+            }
+        }
+
+        // (هنا تكون دوالك السابقة مثل fetchOrders وغيرها)
+        
+        // 1. تشغيل جلب الطلبات فقط (ما نحتاج كود الحماية هنا لأن app.js يتكفل فيه)
+        window.addEventListener('load', fetchOrders);
+    </script>
+
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script src="app.js"></script>
+
+    <script>
+        // هنا تضع كود fetchOrders وأي كود يخص هذه الصفحة
+        window.addEventListener('load', fetchOrders);
+    </script>
+</body>
+</html>

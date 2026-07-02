@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <script>
+    // التأكد من وجود جلسة (Session) فعالة
+    (async () => {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) {
+            window.location.href = 'login.html'; // إذا لم يكن مسجلاً، أعده لصفحة الدخول
+        }
+    })();
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDLT - مصمم سير العمل والمسارات</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        .canvas-grid {
+            background-size: 24px 24px;
+            background-image: radial-gradient(circle, #1e293b 1px, transparent 1px);
+        }
+        .node-card {
+            position: absolute;
+            z-index: 10;
+            user-select: none;
+            cursor: grab;
+        }
+        .node-card:active { cursor: grabbing; }
+
+        /* نقطة التوصيل الصغيرة لرسم الأسهم */
+        .connect-point {
+            width: 12px;
+            height: 12px;
+            background-color: #10b981;
+            border: 2px solid #064e3b;
+            border-radius: 50%;
+            position: absolute;
+            left: -6px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: crosshair;
+            transition: transform 0.15s;
+        }
+        .connect-point:hover { transform: translateY(-50%) scale(1.4); }
+
+        .role-badge {
+            font-size: 9px;
+            padding: 1px 6px;
+            border-radius: 999px;
+            display: inline-block;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex overflow-hidden">
+
+    <!-- القائمة الجانبية الموحدة -->
+    <aside class="w-64 bg-slate-950 border-l border-slate-800 p-6 flex flex-col justify-between shrink-0">
+        <div>
+            <!-- شعار النظام الجديد -->
+            <div class="flex items-center gap-2 mb-8">
+                <span class="bg-emerald-500 text-slate-950 font-bold px-3 py-1 rounded-md text-lg">S</span>
+                <span class="font-bold text-xl text-white tracking-wide">SDLT</span>
+            </div>
+
+
+
+            <!-- الروابط والتنقل بين ملفات القوائم -->
+            <nav class="space-y-1 text-sm">
+                <a href="index.html" class="block bg-slate-900 text-emerald-400 font-medium px-4 py-2.5 rounded-xl border border-slate-800/60"> <i class="fa-solid fa-chart-simple ..."></i> <span>📊 لوحة التحكم</span></a>
+                <a href="routes.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⛓️ مصمم المسارات</a>
+                <a href="branches.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏢 الفروع والمخازن</a>
+                <a href="orders.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📦 الطلبات والتتبع</a>
+                <a href="clinics.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏥 العيادات والأطباء</a>
+                <a href="products.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">💎 المنتجات والتركيبات</a>
+                <a href="reports.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📈 التقارير والتحليلات</a>
+                <a href="admin.html" class="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition"><i class="fa-solid fa-users-gear ..."></i><span> تفعيل الحسابات </span></a>
+                <div class="space-y-1" id="adminMenuContainer">
+    <button onclick="toggleDropdown('usersDropdown', 'usersArrow')" class="w-full flex items-center justify-between p-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition text-sm border border-transparent hover:border-slate-700">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-user-shield w-5 text-center text-slate-400"></i>
+            <span>  المستخدمين </span>
+        </div>
+        <i id="usersArrow" class="fa-solid fa-chevron-left text-[10px] transition-transform duration-300"></i>
+    </button>
+
+    <div id="usersDropdown" class="hidden flex-col gap-3 pr-9 py-2 relative">
+        <div class="absolute right-[22px] top-0 bottom-4 w-px bg-slate-700"></div>
+
+        <a href="users.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            المستخدمين
+        </a>
+
+        <a href="roles.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            الأدوار والصلاحيات
+        </a>
+
+        <a href="permissions.html" class="relative text-emerald-400 hover:text-emerald-300 transition text-sm flex items-center font-bold">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-emerald-500 border-2 border-[#111827] shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+            الصلاحيات
+        </a>
+    </div>
+</div>
+
+
+
+
+<script>
+    // دالة فتح وإغلاق القائمة المنسدلة
+    function toggleDropdown(dropdownId, arrowId) {
+        const dropdown = document.getElementById(dropdownId);
+        const arrow = document.getElementById(arrowId);
+        
+        if (dropdown.classList.contains('hidden')) {
+            dropdown.classList.remove('hidden');
+            dropdown.classList.add('flex');
+            arrow.style.transform = 'rotate(-90deg)'; // تدوير السهم للأسفل
+        } else {
+            dropdown.classList.add('hidden');
+            dropdown.classList.remove('flex');
+            arrow.style.transform = 'rotate(0deg)'; // إعادة السهم
+        }
+    }
+</script>
+
+
+
+                <a href="settings.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⚙️ إعدادات النظام</a>
+                <a href="#" onclick="logoutUser(event)" class="flex items-center gap-3 p-3 mt-4 text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition text-sm font-bold"><i class="fa-solid fa-arrow-right-from-bracket w-5 text-center"></i> <span>تسجيل الخروج</span></a>
+            </nav>
+            
+        </div>
+        <div class="text-xs text-slate-500 border-t border-slate-800 pt-4">
+            المستخدم النشط: <span class="text-slate-300 font-medium">عبدالعزيز الفيفي</span>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex h-screen relative overflow-hidden">
+
+        <!-- الكانفس الرئيسي لرسم المخطط -->
+        <div id="canvas" class="flex-1 h-full canvas-grid bg-slate-900 relative overflow-hidden">
+
+            <!-- شريط اختيار/إنشاء الخريطة -->
+            <div class="absolute top-4 right-4 left-4 z-30 flex items-center gap-2 flex-wrap">
+                <select id="routeMapSelect" onchange="loadSelectedRouteMap()" class="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 outline-none focus:border-emerald-500 min-w-[200px]">
+                    <option value="">-- اختر خريطة محفوظة --</option>
+                </select>
+                <button onclick="openNewMapPrompt()" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-slate-300 px-3 py-2 rounded-xl text-xs flex items-center gap-1.5">
+                    <i class="fa-solid fa-plus"></i> خريطة جديدة
+                </button>
+                <span id="currentMapLabel" class="text-xs text-slate-500 mr-auto"></span>
+            </div>
+
+            <svg id="svgLines" class="absolute inset-0 w-full h-full pointer-events-none z-0">
+                <defs>
+                    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                        <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b" />
+                    </marker>
+                </defs>
+            </svg>
+
+            <!-- العقد (المراحل) تُضاف هنا ديناميكياً عبر الجافاسكربت -->
+        </div>
+
+        <!-- اللوحة الجانبية اليمنى للتحكم -->
+        <aside class="w-80 bg-slate-950 border-r border-slate-800 p-5 flex flex-col h-full shrink-0 z-20 shadow-2xl overflow-y-auto">
+            <div class="space-y-5">
+                <div class="grid grid-cols-2 gap-1 bg-slate-900 p-1 rounded-xl text-[11px] font-bold text-center border border-slate-800">
+                    <button onclick="switchTab('design')" id="tab-design" class="bg-emerald-500 text-slate-950 py-1.5 rounded-lg">تصميم المسار</button>
+                    <button onclick="switchTab('link')" id="tab-link" class="text-slate-400 py-1.5">ربط الأنواع</button>
+                </div>
+
+                <!-- تبويب: تصميم المسار -->
+                <div id="panel-design" class="space-y-4">
+                    <div>
+                        <label class="text-[11px] text-slate-500 block mb-1.5 font-medium">اسم المرحلة الجديدة</label>
+                        <input type="text" id="nodeNameInput" placeholder="مثلاً: غرفة الخزف، التلوين..." class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="text-[11px] text-slate-500 block mb-1.5 font-medium">الرول المسؤول عن هذه المرحلة</label>
+                        <select id="nodeRoleInput" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 outline-none focus:border-emerald-500">
+                            <option value="دكتور">دكتور</option>
+                            <option value="مندوب">مندوب</option>
+                            <option value="استقبال">استقبال</option>
+                            <option value="فني">فني</option>
+                            <option value="مدير معمل">مدير معمل</option>
+                            <option value="جودة">جودة</option>
+                            <option value="مخصص">مخصص (اكتب اسمه يدوياً لاحقاً)</option>
+                        </select>
+                    </div>
+                    <button onclick="createNewNode()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-lg">
+                        <i class="fa-solid fa-plus"></i> إضافة المرحلة للمخطط
+                    </button>
+
+                    <div class="bg-slate-900/50 border border-slate-800/80 rounded-xl p-3 text-xs text-slate-400 space-y-1">
+                        <span class="font-bold text-slate-300 block mb-1">💡 طريقة الاستخدام:</span>
+                        <p>1. اسحب أي كارد لترتيب مكانه.</p>
+                        <p>2. اضغط النقطة الخضراء بطرف الكارد، ثم اضغط الكارد التالي لربطهما بسهم.</p>
+                        <p>3. لا تنسَ الضغط على "حفظ التصميم" بالأسفل.</p>
+                    </div>
+
+                    <button onclick="clearConnections()" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-400 py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5">
+                        ❌ حذف كل الأسهم (بدون حذف المراحل)
+                    </button>
+                </div>
+
+                <!-- تبويب: ربط الأنواع -->
+                <div id="panel-link" class="space-y-4 hidden">
+                    <p class="text-xs text-slate-400 leading-relaxed">اربط هذه الخريطة بنوع/أنواع التركيبات. عند إنشاء طلب جديد بهذا النوع، سيتحرك تلقائياً ضمن هذا المسار بالضبط.</p>
+                    <div>
+                        <label class="text-[11px] text-slate-500 block mb-1.5 font-medium">إضافة نوع تركيبة جديد لهذه الخريطة</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="linkTypeInput" placeholder="مثال: زيركون Zirconia" class="flex-1 bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-slate-100 outline-none focus:border-emerald-500">
+                            <button onclick="linkRestorationType()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-3 rounded-xl text-xs"><i class="fa-solid fa-link"></i></button>
+                        </div>
+                    </div>
+                    <div id="linkedTypesList" class="space-y-2"></div>
+                </div>
+            </div>
+
+            <div class="space-y-2 border-t border-slate-900 pt-4 mt-auto">
+                <button id="saveDesignBtn" onclick="saveRouteMap()" class="w-full bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all shadow-lg">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> حفظ التصميم بالسحاب
+                </button>
+            </div>
+        </aside>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // ============================================
+        // الربط مع Supabase
+        // ============================================
+        const SUPABASE_URL = "https://pdonlejkordqblytufrf.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_GUjTm4RZk7u-GuzEjZm-Mg_neclTR6P";
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const canvas = document.getElementById('canvas');
+        const svgLines = document.getElementById('svgLines');
+
+        // ============================================
+        // الحالة العامة (State) للمخطط الحالي قيد التحرير
+        // ============================================
+        let currentMapId = null;       // معرف الخريطة المحملة حالياً (null = خريطة جديدة غير محفوظة)
+        let nodes = [];                // [{ id (temp أو db), name, role, x, y }]
+        let connections = [];          // [{ from: nodeId, to: nodeId }]
+        let sourceNodeId = null;       // العقدة المصدر أثناء عملية الربط
+        let tempIdCounter = 1;         // مولّد معرفات مؤقتة للعقد الجديدة غير المحفوظة بعد
+
+        // ============================================
+        // ألوان الرولات لتمييزها بصرياً في الكارد
+        // ============================================
+        const ROLE_COLORS = {
+            "دكتور":      "bg-sky-500/15 text-sky-400 border-sky-500/30",
+            "مندوب":      "bg-amber-500/15 text-amber-400 border-amber-500/30",
+            "استقبال":    "bg-violet-500/15 text-violet-400 border-violet-500/30",
+            "فني":        "bg-emerald-500/15 text-emerald-400 border-emerald-500/30",
+            "مدير معمل":  "bg-rose-500/15 text-rose-400 border-rose-500/30",
+            "جودة":       "bg-cyan-500/15 text-cyan-400 border-cyan-500/30",
+            "مخصص":       "bg-slate-700/40 text-slate-300 border-slate-600/40",
+        };
+
+        // ============================================
+        // تحميل قائمة الخرائط المحفوظة عند فتح الصفحة
+        // ============================================
+        async function loadRouteMapsList() {
+            try {
+                const { data, error } = await db.from('route_maps').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+
+                const select = document.getElementById('routeMapSelect');
+                select.innerHTML = '<option value="">-- اختر خريطة محفوظة --</option>';
+                (data || []).forEach(map => {
+                    select.innerHTML += `<option value="${map.id}">${map.name}</option>`;
+                });
+            } catch (err) {
+                console.error("خطأ في جلب قائمة الخرائط:", err);
+                alert("تعذر تحميل قائمة الخرائط المحفوظة. تأكد من الاتصال.");
+            }
+        }
+
+        // ============================================
+        // إنشاء خريطة جديدة فارغة (اسم فقط، بدون مراحل بعد)
+        // ============================================
+        function openNewMapPrompt() {
+            const name = prompt("اكتب اسم الخريطة الجديدة (مثال: مسار الزيركون):");
+            if (!name || !name.trim()) return;
+            createBlankMapState(name.trim());
+        }
+
+        function createBlankMapState(name) {
+            currentMapId = null;
+            nodes = [];
+            connections = [];
+            tempIdCounter = 1;
+            document.getElementById('currentMapLabel').innerText = `خريطة جديدة: ${name}`;
+            canvas.dataset.pendingName = name;
+            renderAllNodes();
+            drawAllLines();
+            loadLinkedTypesUI(); // ستكون فارغة لأن الخريطة غير محفوظة بعد
+        }
+
+        // ============================================
+        // تحميل خريطة محفوظة (مراحلها ووصلاتها) عند اختيارها من القائمة
+        // ============================================
+        async function loadSelectedRouteMap() {
+            const select = document.getElementById('routeMapSelect');
+            const mapId = select.value;
+            if (!mapId) return;
+
+            try {
+                const [{ data: stagesData, error: stagesErr }, { data: connsData, error: connsErr }, { data: mapData, error: mapErr }] = await Promise.all([
+                    db.from('route_stages').select('*').eq('route_map_id', mapId),
+                    db.from('route_connections').select('*').eq('route_map_id', mapId),
+                    db.from('route_maps').select('*').eq('id', mapId).single()
+                ]);
+
+                if (stagesErr || connsErr || mapErr) throw (stagesErr || connsErr || mapErr);
+
+                currentMapId = mapId;
+                nodes = (stagesData || []).map(s => ({ id: s.id, name: s.name, role: s.role, x: s.pos_x, y: s.pos_y, dbId: s.id }));
+                connections = (connsData || []).map(c => ({ from: c.from_stage_id, to: c.to_stage_id }));
+
+                document.getElementById('currentMapLabel').innerText = `تحرير: ${mapData.name}`;
+                renderAllNodes();
+                drawAllLines();
+                loadLinkedTypesUI();
+
+            } catch (err) {
+                console.error("خطأ في تحميل الخريطة:", err);
+                alert("تعذر تحميل الخريطة المحددة.");
+            }
+        }
+
+        // ============================================
+        // رسم/إعادة رسم كل العقد على الكانفس بناءً على مصفوفة nodes
+        // ============================================
+        function renderAllNodes() {
+            // إزالة العقد القديمة من الـ DOM فقط (مع الإبقاء على الـ SVG وشريط الاختيار)
+            canvas.querySelectorAll('.node-card').forEach(el => el.remove());
+
+            nodes.forEach(node => {
+                const el = document.createElement('div');
+                el.id = `node-${node.id}`;
+                el.dataset.nodeId = node.id;
+                const roleStyle = ROLE_COLORS[node.role] || ROLE_COLORS["مخصص"];
+
+                el.className = 'node-card bg-slate-950 border border-slate-800 p-3 rounded-xl shadow-2xl min-w-[150px] text-center hover:border-emerald-500/40 transition-all';
+                el.style.left = `${node.x}px`;
+                el.style.top = `${node.y}px`;
+
+                el.innerHTML = `
+                    <div class="text-xs font-bold text-white">${node.name}</div>
+                    <span class="role-badge border ${roleStyle}">${node.role}</span>
+                    <div class="connect-point" onclick="startConnection(${node.id}, event)"></div>
+                    <button onclick="removeNode(${node.id}, event)" class="absolute -top-1.5 -left-1.5 bg-rose-500/20 text-rose-400 w-4 h-4 rounded-full text-[8px] flex items-center justify-center hover:bg-rose-500 hover:text-white">✕</button>
+                `;
+
+                canvas.appendChild(el);
+                makeElementDraggable(el, node.id);
+                el.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('connect-point') || e.target.tagName === 'BUTTON') return;
+                    handleNodeClick(node.id);
+                });
+            });
+        }
+
+        // ============================================
+        // السحب والإفلات التفاعلي لأي كارد
+        // ============================================
+        function makeElementDraggable(element, nodeId) {
+            let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+            element.onmousedown = dragMouseDown;
+
+            function dragMouseDown(e) {
+                if (e.target.classList.contains('connect-point') || e.target.tagName === 'BUTTON') return;
+                e.preventDefault();
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                document.onmouseup = closeDragElement;
+                document.onmousemove = elementDrag;
+            }
+
+            function elementDrag(e) {
+                e.preventDefault();
+                pos1 = pos3 - e.clientX;
+                pos2 = pos4 - e.clientY;
+                pos3 = e.clientX;
+                pos4 = e.clientY;
+                element.style.top = (element.offsetTop - pos2) + "px";
+                element.style.left = (element.offsetLeft - pos1) + "px";
+
+                // تحديث إحداثيات العقدة في الحالة العامة فوراً
+                const node = nodes.find(n => n.id === nodeId);
+                if (node) {
+                    node.x = element.offsetLeft;
+                    node.y = element.offsetTop;
+                }
+                drawAllLines();
+            }
+
+            function closeDragElement() {
+                document.onmouseup = null;
+                document.onmousemove = null;
+            }
+        }
+
+        // ============================================
+        // بدء وإتمام عملية الربط بين عقدتين
+        // ============================================
+        function startConnection(fromId, event) {
+            event.stopPropagation();
+            sourceNodeId = fromId;
+            document.getElementById(`node-${fromId}`).classList.add('ring-2', 'ring-emerald-500');
+        }
+
+        function handleNodeClick(targetId) {
+            if (sourceNodeId && sourceNodeId !== targetId) {
+                const exists = connections.some(c => c.from === sourceNodeId && c.to === targetId);
+                if (!exists) {
+                    connections.push({ from: sourceNodeId, to: targetId });
+                    drawAllLines();
+                }
+                document.getElementById(`node-${sourceNodeId}`)?.classList.remove('ring-2', 'ring-emerald-500');
+                sourceNodeId = null;
+            }
+        }
+
+        // ============================================
+        // رسم كل الأسهم بين العقد بناءً على إحداثياتها الحالية
+        // ============================================
+        function drawAllLines() {
+            svgLines.innerHTML = svgLines.querySelector('defs').outerHTML;
+
+            connections.forEach(conn => {
+                const fromEl = document.getElementById(`node-${conn.from}`);
+                const toEl = document.getElementById(`node-${conn.to}`);
+                if (!fromEl || !toEl) return;
+
+                const x1 = fromEl.offsetLeft;
+                const y1 = fromEl.offsetTop + (fromEl.offsetHeight / 2);
+                const x2 = toEl.offsetLeft + toEl.offsetWidth;
+                const y2 = toEl.offsetTop + (toEl.offsetHeight / 2);
+
+                const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                const controlX = x1 + (x2 - x1) / 2;
+                const d = `M ${x1} ${y1} C ${controlX} ${y1}, ${controlX} ${y2}, ${x2} ${y2}`;
+
+                path.setAttribute("d", d);
+                path.setAttribute("stroke", "#64748b");
+                path.setAttribute("stroke-width", "2");
+                path.setAttribute("fill", "none");
+                path.setAttribute("marker-end", "url(#arrow)");
+                svgLines.appendChild(path);
+            });
+        }
+
+        // ============================================
+        // إضافة مرحلة جديدة (تُضاف للحالة المحلية فقط، تُحفظ لاحقاً بالسحاب)
+        // ============================================
+        function createNewNode() {
+            const nameInput = document.getElementById('nodeNameInput');
+            const roleInput = document.getElementById('nodeRoleInput');
+            const name = nameInput.value.trim();
+            const role = roleInput.value;
+
+            if (!name) { alert('اكتب اسم المرحلة أولاً'); return; }
+
+            const newId = `temp-${tempIdCounter++}`;
+            nodes.push({ id: newId, name, role, x: 100 + (nodes.length * 30), y: 100 + (nodes.length * 20) });
+
+            renderAllNodes();
+            drawAllLines();
+            nameInput.value = '';
+        }
+
+        function removeNode(id, event) {
+            event.stopPropagation();
+            nodes = nodes.filter(n => n.id !== id);
+            connections = connections.filter(c => c.from !== id && c.to !== id);
+            renderAllNodes();
+            drawAllLines();
+        }
+
+        function clearConnections() {
+            if (!confirm('حذف كل الأسهم بدون حذف المراحل؟')) return;
+            connections = [];
+            drawAllLines();
+        }
+
+        // ============================================
+        // حفظ الخريطة بالكامل في Supabase (الخريطة + المراحل + الوصلات)
+        // ============================================
+        async function saveRouteMap() {
+            const btn = document.getElementById('saveDesignBtn');
+            const originalText = btn.innerHTML;
+
+            if (nodes.length === 0) {
+                alert('أضف مرحلة واحدة على الأقل قبل الحفظ.');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+
+            try {
+                // 1) إنشاء أو تحديث سجل الخريطة نفسها
+                if (!currentMapId) {
+                    const mapName = canvas.dataset.pendingName || prompt('اكتب اسم الخريطة:') || `خريطة بدون اسم`;
+                    const { data: newMap, error: mapErr } = await db.from('route_maps').insert([{ name: mapName }]).select().single();
+                    if (mapErr) throw mapErr;
+                    currentMapId = newMap.id;
+                }
+
+                // 2) حذف المراحل والوصلات القديمة لهذه الخريطة، ثم إعادة إدخالها بالكامل (أبسط وأضمن من تتبع الفروقات)
+                await db.from('route_connections').delete().eq('route_map_id', currentMapId);
+                await db.from('route_stages').delete().eq('route_map_id', currentMapId);
+
+                // 3) إدخال المراحل الجديدة والحصول على معرفاتها الحقيقية من قاعدة البيانات
+                const stagesToInsert = nodes.map(n => ({
+                    route_map_id: currentMapId,
+                    name: n.name,
+                    role: n.role,
+                    pos_x: Math.round(n.x),
+                    pos_y: Math.round(n.y)
+                }));
+                const { data: insertedStages, error: insertErr } = await db.from('route_stages').insert(stagesToInsert).select();
+                if (insertErr) throw insertErr;
+
+                // 4) بناء خريطة تربط المعرف المؤقت (temp-x) بالمعرف الحقيقي الجديد من قاعدة البيانات
+                const idMap = {};
+                nodes.forEach((n, index) => { idMap[n.id] = insertedStages[index].id; });
+
+                // 5) إدخال الوصلات باستخدام المعرفات الحقيقية الجديدة
+                if (connections.length > 0) {
+                    const connsToInsert = connections.map(c => ({
+                        route_map_id: currentMapId,
+                        from_stage_id: idMap[c.from],
+                        to_stage_id: idMap[c.to]
+                    }));
+                    const { error: connErr } = await db.from('route_connections').insert(connsToInsert);
+                    if (connErr) throw connErr;
+                }
+
+                alert('✅ تم حفظ الخريطة بنجاح في السحاب!');
+                await loadRouteMapsList();
+                document.getElementById('routeMapSelect').value = currentMapId;
+                await loadSelectedRouteMap(); // إعادة تحميل لضمان توافق المعرفات الجديدة مع الواجهة
+
+            } catch (err) {
+                console.error("خطأ في حفظ الخريطة:", err);
+                alert('حدث خطأ أثناء حفظ التصميم. تحقق من الاتصال أو صلاحيات الجدول.');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // ============================================
+        // التبويبات الجانبية (تصميم المسار / ربط الأنواع)
+        // ============================================
+        function switchTab(tab) {
+            const isDesign = tab === 'design';
+            document.getElementById('panel-design').classList.toggle('hidden', !isDesign);
+            document.getElementById('panel-link').classList.toggle('hidden', isDesign);
+
+            document.getElementById('tab-design').className = isDesign
+                ? 'bg-emerald-500 text-slate-950 py-1.5 rounded-lg'
+                : 'text-slate-400 py-1.5';
+            document.getElementById('tab-link').className = !isDesign
+                ? 'bg-emerald-500 text-slate-950 py-1.5 rounded-lg'
+                : 'text-slate-400 py-1.5';
+
+            if (!isDesign) loadLinkedTypesUI();
+        }
+
+        // ============================================
+        // ربط نوع تركيبة بالخريطة الحالية (يتطلب أن تكون الخريطة محفوظة أولاً)
+        // ============================================
+        async function linkRestorationType() {
+            if (!currentMapId) {
+                alert('احفظ الخريطة أولاً قبل ربط أنواع التركيبات بها.');
+                return;
+            }
+            const input = document.getElementById('linkTypeInput');
+            const typeName = input.value.trim();
+            if (!typeName) return;
+
+            try {
+                // upsert: إذا كان النوع مربوطاً بخريطة أخرى سابقاً، يُعاد ربطه بهذه الخريطة الجديدة
+                const { error } = await db.from('restoration_type_routes')
+                    .upsert([{ restoration_type: typeName, route_map_id: currentMapId }], { onConflict: 'restoration_type' });
+
+                if (error) throw error;
+
+                input.value = '';
+                loadLinkedTypesUI();
+            } catch (err) {
+                console.error("خطأ في ربط النوع:", err);
+                alert('تعذر ربط النوع. تحقق من الاتصال.');
+            }
+        }
+
+        async function loadLinkedTypesUI() {
+            const container = document.getElementById('linkedTypesList');
+            if (!currentMapId) {
+                container.innerHTML = `<p class="text-xs text-slate-600 text-center py-4">احفظ الخريطة أولاً لتتمكن من ربط أنواع بها.</p>`;
+                return;
+            }
+
+            try {
+                const { data, error } = await db.from('restoration_type_routes').select('*').eq('route_map_id', currentMapId);
+                if (error) throw error;
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `<p class="text-xs text-slate-600 text-center py-4">لا توجد أنواع مربوطة بهذه الخريطة بعد.</p>`;
+                    return;
+                }
+
+                container.innerHTML = data.map(t => `
+                    <div class="flex justify-between items-center bg-slate-900 border border-slate-800 rounded-lg px-3 py-2">
+                        <span class="text-xs text-slate-300">${t.restoration_type}</span>
+                        <button onclick="unlinkRestorationType(${t.id})" class="text-rose-400 hover:text-rose-300 text-xs"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                console.error("خطأ في جلب الأنواع المربوطة:", err);
+            }
+        }
+
+        async function unlinkRestorationType(id) {
+            await db.from('restoration_type_routes').delete().eq('id', id);
+            loadLinkedTypesUI();
+        }
+
+        // ============================================
+        // التشغيل الأولي عند فتح الصفحة
+        // ============================================
+        window.onload = () => {
+            loadRouteMapsList();
+            drawAllLines();
+            window.onload = async () => {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html';
+    } else {
+        // يمكنك هنا جلب الـ role من جدول profiles والتحكم في إظهار الأزرار
+    }
+};
+        };
+    </script>
+</body>
+</html>

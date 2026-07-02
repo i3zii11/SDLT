@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <script>
+    // التأكد من وجود جلسة (Session) فعالة
+    (async () => {
+        const { data: { session } } = await db.auth.getSession();
+        if (!session) {
+            window.location.href = 'login.html'; // إذا لم يكن مسجلاً، أعده لصفحة الدخول
+        }
+    })();
+</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDLT - العيادات والأطباء</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        @media print {
+            aside, .no-print { display: none !important; }
+            main { padding: 0 !important; }
+            body { background: white; color: black; }
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex">
+
+    <!-- القائمة الجانبية -->
+    <!-- القائمة الجانبية الموحدة (Sidebar) -->
+    <aside class="w-64 bg-slate-950 border-l border-slate-800 p-6 flex flex-col justify-between shrink-0">
+        <div>
+            <!-- شعار النظام الجديد -->
+            <div class="flex items-center gap-2 mb-8">
+                <span class="bg-emerald-500 text-slate-950 font-bold px-3 py-1 rounded-md text-lg">S</span>
+                <span class="font-bold text-xl text-white tracking-wide">SDLT</span>
+            </div>
+
+
+
+            <!-- الروابط والتنقل بين ملفات القوائم -->
+            <nav class="space-y-1 text-sm">
+                <a href="index.html" class="block bg-slate-900 text-emerald-400 font-medium px-4 py-2.5 rounded-xl border border-slate-800/60"> <i class="fa-solid fa-chart-simple ..."></i> <span>📊 لوحة التحكم</span></a>
+                <a href="routes.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⛓️ مصمم المسارات</a>
+                <a href="branches.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏢 الفروع والمخازن</a>
+                <a href="orders.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📦 الطلبات والتتبع</a>
+                <a href="clinics.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏥 العيادات والأطباء</a>
+                <a href="products.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">💎 المنتجات والتركيبات</a>
+                <a href="reports.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📈 التقارير والتحليلات</a>
+                <a href="admin.html" class="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition"><i class="fa-solid fa-users-gear ..."></i><span> تفعيل الحسابات </span></a>
+                <div class="space-y-1" id="adminMenuContainer">
+    <button onclick="toggleDropdown('usersDropdown', 'usersArrow')" class="w-full flex items-center justify-between p-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition text-sm border border-transparent hover:border-slate-700">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-user-shield w-5 text-center text-slate-400"></i>
+            <span>  المستخدمين </span>
+        </div>
+        <i id="usersArrow" class="fa-solid fa-chevron-left text-[10px] transition-transform duration-300"></i>
+    </button>
+
+    <div id="usersDropdown" class="hidden flex-col gap-3 pr-9 py-2 relative">
+        <div class="absolute right-[22px] top-0 bottom-4 w-px bg-slate-700"></div>
+
+        <a href="users.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            المستخدمين
+        </a>
+
+        <a href="roles.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            الأدوار والصلاحيات
+        </a>
+
+        <a href="permissions.html" class="relative text-emerald-400 hover:text-emerald-300 transition text-sm flex items-center font-bold">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-emerald-500 border-2 border-[#111827] shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+            الصلاحيات
+        </a>
+    </div>
+</div>
+
+
+
+
+<script>
+    // دالة فتح وإغلاق القائمة المنسدلة
+    function toggleDropdown(dropdownId, arrowId) {
+        const dropdown = document.getElementById(dropdownId);
+        const arrow = document.getElementById(arrowId);
+        
+        if (dropdown.classList.contains('hidden')) {
+            dropdown.classList.remove('hidden');
+            dropdown.classList.add('flex');
+            arrow.style.transform = 'rotate(-90deg)'; // تدوير السهم للأسفل
+        } else {
+            dropdown.classList.add('hidden');
+            dropdown.classList.remove('flex');
+            arrow.style.transform = 'rotate(0deg)'; // إعادة السهم
+        }
+    }
+</script>
+
+
+
+                <a href="settings.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⚙️ إعدادات النظام</a>
+                <a href="#" onclick="logoutUser(event)" class="flex items-center gap-3 p-3 mt-4 text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition text-sm font-bold"><i class="fa-solid fa-arrow-right-from-bracket w-5 text-center"></i> <span>تسجيل الخروج</span></a>
+            </nav>
+            
+        </div>
+        <div class="text-xs text-slate-500 border-t border-slate-800 pt-4">
+            المستخدم النشط: <span class="text-slate-300 font-medium">عبدالعزيز الفيفي</span>
+        </div>
+    </aside>
+
+    <main class="flex-1 p-8 overflow-y-auto h-screen">
+
+        <!-- تنبيه إعداد قاعدة البيانات -->
+        <div id="dbSetupAlert" class="hidden mb-4 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm rounded-xl p-4 no-print">
+            <i class="fa-solid fa-triangle-exclamation ml-2"></i>
+            <span id="dbSetupMsg">يجب إنشاء جداول clinics و doctors في Supabase أولاً.</span>
+        </div>
+
+        <!-- تبويبات العيادات / الأطباء -->
+        <div class="flex gap-1 mb-6 bg-slate-950 border border-slate-800 rounded-xl p-1 w-fit no-print">
+            <button id="tab-clinics" onclick="switchTab('clinics')"
+                class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all bg-emerald-500 text-slate-950">
+                <i class="fa-solid fa-hospital ml-1.5"></i> العيادات
+            </button>
+            <button id="tab-doctors" onclick="switchTab('doctors')"
+                class="tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white">
+                <i class="fa-solid fa-user-doctor ml-1.5"></i> الأطباء
+            </button>
+        </div>
+
+        <!-- ====== قسم العيادات ====== -->
+        <section id="panel-clinics">
+            <header class="mb-6 flex flex-wrap justify-between items-start gap-4">
+                <div>
+                    <div class="text-xs text-slate-500 flex items-center gap-1.5 mb-1">
+                        <span>العيادات</span>
+                        <i class="fa-solid fa-chevron-left text-[9px]"></i>
+                        <span class="text-slate-400">القائمة</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white">العيادات</h1>
+                    <p class="text-slate-500 text-sm mt-0.5">قائمة العيادات المسجلة</p>
+                </div>
+                <div class="flex flex-wrap gap-2 no-print">
+                    <button onclick="openClinicModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-plus"></i> إضافة عيادة
+                    </button>
+                    <button onclick="exportData('clinics')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-download"></i> تصدير
+                    </button>
+                    <button onclick="printTable('clinics')" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-print"></i> طباعة PDF
+                    </button>
+                </div>
+            </header>
+
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="p-4 border-b border-slate-800 flex flex-wrap justify-between items-center gap-3 no-print">
+                    <div class="relative flex-1 min-w-[200px] max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="text" id="clinicSearch" oninput="filterTable('clinics')" placeholder="بحث..."
+                            class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl pr-9 p-2.5 focus:border-emerald-500 outline-none">
+                    </div>
+                    <select id="clinicPageSize" onchange="renderClinics()" class="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-3 py-2 outline-none">
+                        <option value="10">10 لكل صفحة</option>
+                        <option value="25">25 لكل صفحة</option>
+                        <option value="50">50 لكل صفحة</option>
+                    </select>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse" id="clinicsTable">
+                        <thead>
+                            <tr class="border-b border-slate-800 bg-slate-900/40 text-slate-400 text-xs font-semibold">
+                                <th class="p-4 w-10 no-print"><input type="checkbox" id="clinicSelectAll" onchange="toggleSelectAll('clinics', this.checked)" class="rounded border-slate-600"></th>
+                                <th class="p-4">الاسم</th>
+                                <th class="p-4">الفرع</th>
+                                <th class="p-4 text-center">نشط</th>
+                                <th class="p-4">أنشئ في</th>
+                                <th class="p-4 no-print">العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clinicsTableBody" class="text-sm divide-y divide-slate-800/60"></tbody>
+                    </table>
+                </div>
+
+                <div class="p-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-500">
+                    <span id="clinicsPaginationInfo">عرض 0 نتائج</span>
+                    <div id="clinicsPagination" class="flex gap-1 no-print"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ====== قسم الأطباء ====== -->
+        <section id="panel-doctors" class="hidden">
+            <header class="mb-6 flex flex-wrap justify-between items-start gap-4">
+                <div>
+                    <div class="text-xs text-slate-500 flex items-center gap-1.5 mb-1">
+                        <span>الأطباء</span>
+                        <i class="fa-solid fa-chevron-left text-[9px]"></i>
+                        <span class="text-slate-400">القائمة</span>
+                    </div>
+                    <h1 class="text-2xl font-bold text-white">الأطباء</h1>
+                    <p class="text-slate-500 text-sm mt-0.5">قائمة الأطباء المسجلين</p>
+                </div>
+                <div class="flex flex-wrap gap-2 no-print">
+                    <button onclick="openDoctorModal()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-plus"></i> إضافة طبيب
+                    </button>
+                    <button onclick="exportData('doctors')" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-download"></i> تصدير
+                    </button>
+                    <button onclick="printTable('doctors')" class="bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 transition-all">
+                        <i class="fa-solid fa-print"></i> طباعة PDF
+                    </button>
+                </div>
+            </header>
+
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+                <div class="p-4 border-b border-slate-800 flex flex-wrap justify-between items-center gap-3 no-print">
+                    <div class="relative flex-1 min-w-[200px] max-w-sm">
+                        <i class="fa-solid fa-magnifying-glass absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                        <input type="text" id="doctorSearch" oninput="filterTable('doctors')" placeholder="بحث..."
+                            class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl pr-9 p-2.5 focus:border-emerald-500 outline-none">
+                    </div>
+                    <select id="doctorPageSize" onchange="renderDoctors()" class="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-3 py-2 outline-none">
+                        <option value="10">10 لكل صفحة</option>
+                        <option value="25">25 لكل صفحة</option>
+                        <option value="50">50 لكل صفحة</option>
+                    </select>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right border-collapse" id="doctorsTable">
+                        <thead>
+                            <tr class="border-b border-slate-800 bg-slate-900/40 text-slate-400 text-xs font-semibold">
+                                <th class="p-4 w-10 no-print"><input type="checkbox" id="doctorSelectAll" onchange="toggleSelectAll('doctors', this.checked)" class="rounded border-slate-600"></th>
+                                <th class="p-4">الاسم</th>
+                                <th class="p-4">البريد الإلكتروني</th>
+                                <th class="p-4">العيادة</th>
+                                <th class="p-4">التخصص</th>
+                                <th class="p-4">الجنس</th>
+                                <th class="p-4 text-center">نشط</th>
+                                <th class="p-4 no-print">العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="doctorsTableBody" class="text-sm divide-y divide-slate-800/60"></tbody>
+                    </table>
+                </div>
+
+                <div class="p-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-500">
+                    <span id="doctorsPaginationInfo">عرض 0 نتائج</span>
+                    <div id="doctorsPagination" class="flex gap-1 no-print"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- مودال إضافة/تعديل عيادة -->
+    <div id="clinicModal" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center hidden z-50 no-print">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md mx-4">
+            <h3 id="clinicModalTitle" class="font-bold text-white mb-4 text-lg">إضافة عيادة</h3>
+            <input type="hidden" id="clinicEditId">
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">اسم العيادة <span class="text-rose-500">*</span></label>
+                    <input type="text" id="clinicName" placeholder="مثال: الفلانت" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">الفرع</label>
+                    <select id="clinicBranch" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500">
+                        <option value="">-- اختر الفرع --</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="clinicActive" checked class="rounded border-slate-600">
+                    <label for="clinicActive" class="text-sm text-slate-300">نشط</label>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-5">
+                <button onclick="closeClinicModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-sm transition-all">إلغاء</button>
+                <button onclick="saveClinic()" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all">حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال إضافة/تعديل طبيب -->
+    <div id="doctorModal" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center hidden z-50 no-print">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md mx-4 max-h-[90vh] overflow-y-auto">
+            <h3 id="doctorModalTitle" class="font-bold text-white mb-4 text-lg">إضافة طبيب</h3>
+            <input type="hidden" id="doctorEditId">
+            <div class="space-y-3">
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">اسم الطبيب <span class="text-rose-500">*</span></label>
+                    <input type="text" id="doctorName" placeholder="مثال: د. عبدالله بحري" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">البريد الإلكتروني</label>
+                    <input type="email" id="doctorEmail" placeholder="Dr.Example@doc1.com" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">العيادة</label>
+                    <select id="doctorClinic" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500">
+                        <option value="">-- اختر العيادة --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">التخصص</label>
+                    <input type="text" id="doctorSpecialization" placeholder="مثال: أخصائي تقويم الأسنان" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 block mb-1">الجنس</label>
+                    <select id="doctorGender" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-emerald-500">
+                        <option value="ذكر">ذكر</option>
+                        <option value="أنثى">أنثى</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <input type="checkbox" id="doctorActive" checked class="rounded border-slate-600">
+                    <label for="doctorActive" class="text-sm text-slate-300">نشط</label>
+                </div>
+            </div>
+            <div class="flex gap-2 mt-5">
+                <button onclick="closeDoctorModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-sm transition-all">إلغاء</button>
+                <button onclick="saveDoctor()" class="flex-1 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold py-2.5 rounded-xl text-sm transition-all">حفظ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال عرض التفاصيل -->
+    <div id="viewModal" class="fixed inset-0 bg-slate-950/80 flex items-center justify-center hidden z-50 no-print">
+        <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="viewModalTitle" class="font-bold text-white text-lg">التفاصيل</h3>
+                <button onclick="closeViewModal()" class="text-slate-500 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="viewModalBody" class="space-y-3 text-sm"></div>
+            <button onclick="closeViewModal()" class="w-full mt-5 bg-slate-800 hover:bg-slate-700 py-2.5 rounded-xl text-sm transition-all">إغلاق</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = "https://pdonlejkordqblytufrf.supabase.co";
+        const SUPABASE_ANON_KEY = "sb_publishable_GUjTm4RZk7u-GuzEjZm-Mg_neclTR6P";
+        const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let activeTab = 'clinics';
+        let clinicsData = [];
+        let doctorsData = [];
+        let branchesData = [];
+        let clinicPage = 1;
+        let doctorPage = 1;
+        let filteredClinics = [];
+        let filteredDoctors = [];
+
+        // ── تبويبات ──
+        function switchTab(tab) {
+            activeTab = tab;
+            document.getElementById('panel-clinics').classList.toggle('hidden', tab !== 'clinics');
+            document.getElementById('panel-doctors').classList.toggle('hidden', tab !== 'doctors');
+
+            document.getElementById('tab-clinics').className = tab === 'clinics'
+                ? 'tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all bg-emerald-500 text-slate-950'
+                : 'tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white';
+            document.getElementById('tab-doctors').className = tab === 'doctors'
+                ? 'tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all bg-emerald-500 text-slate-950'
+                : 'tab-btn px-5 py-2 rounded-lg text-sm font-medium transition-all text-slate-400 hover:text-white';
+        }
+
+        // ── تنسيق التاريخ ──
+        function formatDate(iso) {
+            if (!iso) return '-';
+            const d = new Date(iso);
+            const pad = n => String(n).padStart(2, '0');
+            return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+        }
+
+        function activeIcon(isActive) {
+            return isActive !== false
+                ? '<i class="fa-solid fa-circle-check text-emerald-500 text-lg"></i>'
+                : '<i class="fa-solid fa-circle-xmark text-slate-600 text-lg"></i>';
+        }
+
+        // ── جلب البيانات ──
+        async function fetchAll() {
+            const [clinicsRes, doctorsRes, branchesRes] = await Promise.all([
+                db.from('clinics').select('*').order('created_at', { ascending: false }),
+                db.from('doctors').select('*').order('created_at', { ascending: false }),
+                db.from('branches').select('*')
+            ]);
+
+            const missingTables = [];
+            if (clinicsRes.error) {
+                console.error('clinics:', clinicsRes.error);
+                clinicsData = [];
+                if (clinicsRes.error.code === '42P01' || clinicsRes.error.message.includes('does not exist')) missingTables.push('clinics');
+            } else {
+                clinicsData = clinicsRes.data || [];
+            }
+
+            if (doctorsRes.error) {
+                console.error('doctors:', doctorsRes.error);
+                doctorsData = [];
+                if (doctorsRes.error.code === '42P01' || doctorsRes.error.message.includes('does not exist')) missingTables.push('doctors');
+            } else {
+                doctorsData = doctorsRes.data || [];
+            }
+
+            const alertEl = document.getElementById('dbSetupAlert');
+            if (missingTables.length) {
+                alertEl.classList.remove('hidden');
+                document.getElementById('dbSetupMsg').textContent =
+                    `جدول ${missingTables.join(' و ')} غير موجود في Supabase. أنشئه من SQL Editor (الكود موجود في رسالة المساعدة).`;
+            } else {
+                alertEl.classList.add('hidden');
+            }
+
+            branchesData = branchesRes.error ? [] : (branchesRes.data || []);
+
+            populateBranchSelect();
+            populateClinicSelect();
+            filterTable('clinics');
+            filterTable('doctors');
+        }
+
+        function populateBranchSelect() {
+            const sel = document.getElementById('clinicBranch');
+            sel.innerHTML = '<option value="">-- اختر الفرع --</option>' +
+                branchesData.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
+        }
+
+        function populateClinicSelect() {
+            const sel = document.getElementById('doctorClinic');
+            sel.innerHTML = '<option value="">-- اختر العيادة --</option>' +
+                clinicsData.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        }
+
+        function getBranchName(branchId) {
+            const b = branchesData.find(x => x.id == branchId);
+            return b ? b.name : (branchId || '-');
+        }
+
+        function getClinicName(clinicId) {
+            const c = clinicsData.find(x => x.id == clinicId);
+            return c ? c.name : (clinicId || '-');
+        }
+
+        // ── البحث والفلترة ──
+        function filterTable(type) {
+            const q = document.getElementById(type === 'clinics' ? 'clinicSearch' : 'doctorSearch').value.toLowerCase();
+            if (type === 'clinics') {
+                filteredClinics = clinicsData.filter(c =>
+                    !q || [c.name, getBranchName(c.branch_id)].join(' ').toLowerCase().includes(q)
+                );
+                clinicPage = 1;
+                renderClinics();
+            } else {
+                filteredDoctors = doctorsData.filter(d =>
+                    !q || [d.name, d.email, getClinicName(d.clinic_id), d.specialization, d.gender].join(' ').toLowerCase().includes(q)
+                );
+                doctorPage = 1;
+                renderDoctors();
+            }
+        }
+
+        // ── ترقيم الصفحات ──
+        function paginate(data, page, pageSize) {
+            const start = (page - 1) * pageSize;
+            return { items: data.slice(start, start + pageSize), total: data.length, pages: Math.ceil(data.length / pageSize) || 1 };
+        }
+
+        function renderPagination(containerId, infoId, currentPage, totalPages, total, pageSize, onPage) {
+            const start = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+            const end = Math.min(currentPage * pageSize, total);
+            document.getElementById(infoId).textContent = total === 0
+                ? 'لا توجد نتائج'
+                : `عرض ${start} إلى ${end} من ${total} نتائج`;
+
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            if (totalPages <= 1) return;
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.textContent = i;
+                btn.className = i === currentPage
+                    ? 'w-8 h-8 rounded-lg bg-emerald-500 text-slate-950 font-bold text-xs'
+                    : 'w-8 h-8 rounded-lg bg-slate-800 text-slate-400 hover:text-white text-xs';
+                btn.onclick = () => onPage(i);
+                container.appendChild(btn);
+            }
+        }
+
+        // ── عرض العيادات ──
+        function renderClinics() {
+            const pageSize = parseInt(document.getElementById('clinicPageSize').value);
+            const { items, total, pages } = paginate(filteredClinics, clinicPage, pageSize);
+            const tbody = document.getElementById('clinicsTableBody');
+
+            if (total === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="p-10 text-center text-slate-500">
+                    <i class="fa-solid fa-hospital text-2xl mb-2 block opacity-30"></i>
+                    لا توجد عيادات مسجلة. اضغط "إضافة عيادة" للبدء.
+                </td></tr>`;
+            } else {
+                tbody.innerHTML = items.map(c => `
+                    <tr class="data-row hover:bg-slate-900/30 transition-all">
+                        <td class="p-4 no-print"><input type="checkbox" class="row-check rounded border-slate-600" data-id="${c.id}"></td>
+                        <td class="p-4 font-medium text-white">${c.name}</td>
+                        <td class="p-4 text-slate-400">${getBranchName(c.branch_id)}</td>
+                        <td class="p-4 text-center">${activeIcon(c.is_active)}</td>
+                        <td class="p-4 text-slate-500 font-mono text-xs">${formatDate(c.created_at)}</td>
+                        <td class="p-4 no-print">
+                            <button onclick="editClinic(${c.id})" class="text-emerald-400 hover:text-emerald-300 text-xs ml-3"><i class="fa-solid fa-pen ml-1"></i>تعديل</button>
+                            <button onclick="viewClinic(${c.id})" class="text-emerald-400 hover:text-emerald-300 text-xs"><i class="fa-solid fa-eye ml-1"></i>عرض</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            renderPagination('clinicsPagination', 'clinicsPaginationInfo', clinicPage, pages, total, pageSize, p => { clinicPage = p; renderClinics(); });
+        }
+
+        // ── عرض الأطباء ──
+        function renderDoctors() {
+            const pageSize = parseInt(document.getElementById('doctorPageSize').value);
+            const { items, total, pages } = paginate(filteredDoctors, doctorPage, pageSize);
+            const tbody = document.getElementById('doctorsTableBody');
+
+            if (total === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-10 text-center text-slate-500">
+                    <i class="fa-solid fa-user-doctor text-2xl mb-2 block opacity-30"></i>
+                    لا يوجد أطباء مسجلون. اضغط "إضافة طبيب" للبدء.
+                </td></tr>`;
+            } else {
+                tbody.innerHTML = items.map(d => `
+                    <tr class="data-row hover:bg-slate-900/30 transition-all">
+                        <td class="p-4 no-print"><input type="checkbox" class="row-check rounded border-slate-600" data-id="${d.id}"></td>
+                        <td class="p-4 font-medium text-white">${d.name}</td>
+                        <td class="p-4 text-slate-400 font-mono text-xs">${d.email || '-'}</td>
+                        <td class="p-4 text-slate-300">${getClinicName(d.clinic_id)}</td>
+                        <td class="p-4 text-slate-400">${d.specialization || '-'}</td>
+                        <td class="p-4 text-slate-400">${d.gender || '-'}</td>
+                        <td class="p-4 text-center">${activeIcon(d.is_active)}</td>
+                        <td class="p-4 no-print">
+                            <button onclick="editDoctor(${d.id})" class="text-emerald-400 hover:text-emerald-300 text-xs ml-3"><i class="fa-solid fa-pen ml-1"></i>تعديل</button>
+                            <button onclick="viewDoctor(${d.id})" class="text-emerald-400 hover:text-emerald-300 text-xs"><i class="fa-solid fa-eye ml-1"></i>عرض</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            renderPagination('doctorsPagination', 'doctorsPaginationInfo', doctorPage, pages, total, pageSize, p => { doctorPage = p; renderDoctors(); });
+        }
+
+        // ── مودال العيادة ──
+        function openClinicModal() {
+            document.getElementById('clinicEditId').value = '';
+            document.getElementById('clinicModalTitle').textContent = 'إضافة عيادة';
+            document.getElementById('clinicName').value = '';
+            document.getElementById('clinicBranch').value = '';
+            document.getElementById('clinicActive').checked = true;
+            document.getElementById('clinicModal').classList.remove('hidden');
+        }
+
+        function closeClinicModal() {
+            document.getElementById('clinicModal').classList.add('hidden');
+        }
+
+        function editClinic(id) {
+            const c = clinicsData.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('clinicEditId').value = id;
+            document.getElementById('clinicModalTitle').textContent = 'تعديل عيادة';
+            document.getElementById('clinicName').value = c.name;
+            document.getElementById('clinicBranch').value = c.branch_id || '';
+            document.getElementById('clinicActive').checked = c.is_active !== false;
+            document.getElementById('clinicModal').classList.remove('hidden');
+        }
+
+        function viewClinic(id) {
+            const c = clinicsData.find(x => x.id === id);
+            if (!c) return;
+            document.getElementById('viewModalTitle').textContent = c.name;
+            document.getElementById('viewModalBody').innerHTML = `
+                <div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-500">الفرع</span><span class="text-white">${getBranchName(c.branch_id)}</span></div>
+                <div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-500">الحالة</span><span>${c.is_active !== false ? 'نشط' : 'غير نشط'}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">تاريخ الإنشاء</span><span class="font-mono text-xs">${formatDate(c.created_at)}</span></div>
+            `;
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        async function saveClinic() {
+            const name = document.getElementById('clinicName').value.trim();
+            const branch_id = document.getElementById('clinicBranch').value || null;
+            const is_active = document.getElementById('clinicActive').checked;
+            const editId = document.getElementById('clinicEditId').value;
+
+            if (!name) { alert('الرجاء إدخال اسم العيادة'); return; }
+
+            const payload = { name, branch_id: branch_id ? parseInt(branch_id) : null, is_active };
+            let error;
+
+            if (editId) {
+                ({ error } = await db.from('clinics').update(payload).eq('id', editId));
+            } else {
+                ({ error } = await db.from('clinics').insert([payload]));
+            }
+
+            if (error) { alert('خطأ في الحفظ: ' + error.message); console.error(error); return; }
+
+            closeClinicModal();
+            await fetchAll();
+        }
+
+        // ── مودال الطبيب ──
+        function openDoctorModal() {
+            document.getElementById('doctorEditId').value = '';
+            document.getElementById('doctorModalTitle').textContent = 'إضافة طبيب';
+            document.getElementById('doctorName').value = '';
+            document.getElementById('doctorEmail').value = '';
+            document.getElementById('doctorClinic').value = '';
+            document.getElementById('doctorSpecialization').value = '';
+            document.getElementById('doctorGender').value = 'ذكر';
+            document.getElementById('doctorActive').checked = true;
+            document.getElementById('doctorModal').classList.remove('hidden');
+        }
+
+        function closeDoctorModal() {
+            document.getElementById('doctorModal').classList.add('hidden');
+        }
+
+        function editDoctor(id) {
+            const d = doctorsData.find(x => x.id === id);
+            if (!d) return;
+            document.getElementById('doctorEditId').value = id;
+            document.getElementById('doctorModalTitle').textContent = 'تعديل طبيب';
+            document.getElementById('doctorName').value = d.name;
+            document.getElementById('doctorEmail').value = d.email || '';
+            document.getElementById('doctorClinic').value = d.clinic_id || '';
+            document.getElementById('doctorSpecialization').value = d.specialization || '';
+            document.getElementById('doctorGender').value = d.gender || 'ذكر';
+            document.getElementById('doctorActive').checked = d.is_active !== false;
+            document.getElementById('doctorModal').classList.remove('hidden');
+        }
+
+        function viewDoctor(id) {
+            const d = doctorsData.find(x => x.id === id);
+            if (!d) return;
+            document.getElementById('viewModalTitle').textContent = d.name;
+            document.getElementById('viewModalBody').innerHTML = `
+                <div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-500">البريد</span><span class="font-mono text-xs">${d.email || '-'}</span></div>
+                <div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-500">العيادة</span><span class="text-white">${getClinicName(d.clinic_id)}</span></div>
+                <div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-500">التخصص</span><span>${d.specialization || '-'}</span></div>
+                <div class="flex justify-between border-b border-slate-800 pb-2"><span class="text-slate-500">الجنس</span><span>${d.gender || '-'}</span></div>
+                <div class="flex justify-between"><span class="text-slate-500">الحالة</span><span>${d.is_active !== false ? 'نشط' : 'غير نشط'}</span></div>
+            `;
+            document.getElementById('viewModal').classList.remove('hidden');
+        }
+
+        async function saveDoctor() {
+            const name = document.getElementById('doctorName').value.trim();
+            const email = document.getElementById('doctorEmail').value.trim();
+            const clinic_id = document.getElementById('doctorClinic').value || null;
+            const specialization = document.getElementById('doctorSpecialization').value.trim();
+            const gender = document.getElementById('doctorGender').value;
+            const is_active = document.getElementById('doctorActive').checked;
+            const editId = document.getElementById('doctorEditId').value;
+
+            if (!name) { alert('الرجاء إدخال اسم الطبيب'); return; }
+
+            const payload = { name, email, clinic_id: clinic_id ? parseInt(clinic_id) : null, specialization, gender, is_active };
+            let error;
+
+            if (editId) {
+                ({ error } = await db.from('doctors').update(payload).eq('id', editId));
+            } else {
+                ({ error } = await db.from('doctors').insert([payload]));
+            }
+
+            if (error) { alert('خطأ في الحفظ: ' + error.message); console.error(error); return; }
+
+            closeDoctorModal();
+            await fetchAll();
+        }
+
+        function closeViewModal() {
+            document.getElementById('viewModal').classList.add('hidden');
+        }
+
+        // ── تحديد الكل ──
+        function toggleSelectAll(type, checked) {
+            const panel = type === 'clinics' ? 'panel-clinics' : 'panel-doctors';
+            document.querySelectorAll(`#${panel} .row-check`).forEach(cb => cb.checked = checked);
+        }
+
+        // ── تصدير CSV ──
+        function exportData(type) {
+            const data = type === 'clinics' ? filteredClinics : filteredDoctors;
+            if (!data.length) { alert('لا توجد بيانات للتصدير'); return; }
+
+            let csv, filename;
+            if (type === 'clinics') {
+                csv = 'الاسم,الفرع,نشط,أنشئ في\n' + data.map(c =>
+                    `"${c.name}","${getBranchName(c.branch_id)}","${c.is_active !== false ? 'نعم' : 'لا'}","${formatDate(c.created_at)}"`
+                ).join('\n');
+                filename = 'clinics.csv';
+            } else {
+                csv = 'الاسم,البريد,العيادة,التخصص,الجنس,نشط\n' + data.map(d =>
+                    `"${d.name}","${d.email || ''}","${getClinicName(d.clinic_id)}","${d.specialization || ''}","${d.gender || ''}","${d.is_active !== false ? 'نعم' : 'لا'}"`
+                ).join('\n');
+                filename = 'doctors.csv';
+            }
+
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+        }
+
+        function printTable(type) {
+            switchTab(type);
+            setTimeout(() => window.print(), 300);
+        }
+
+        window.onload = fetchAll;
+        window.onload = async () => {
+    const { data: { session } } = await db.auth.getSession();
+    if (!session) {
+        window.location.href = 'login.html';
+    } else {
+        // يمكنك هنا جلب الـ role من جدول profiles والتحكم في إظهار الأزرار
+    }
+};
+    </script>
+</body>
+</html>

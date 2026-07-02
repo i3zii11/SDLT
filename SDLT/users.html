@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المستخدمين - SDLT</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+        body { font-family: 'Tajawal', sans-serif; background-color: #0b1121; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        
+        /* تخصيص شكل الـ Checkbox */
+        input[type="checkbox"] {
+            appearance: none; background-color: #1e293b; margin: 0; font: inherit;
+            color: currentColor; width: 1.15em; height: 1.15em; border: 1px solid #334155;
+            border-radius: 0.25em; display: grid; place-content: center; cursor: pointer;
+        }
+        input[type="checkbox"]::before {
+            content: ""; width: 0.65em; height: 0.65em; transform: scale(0);
+            transition: 120ms transform ease-in-out;
+            box-shadow: inset 1em 1em #10b981; background-color: #10b981;
+            transform-origin: center; clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+        }
+        input[type="checkbox"]:checked::before { transform: scale(1); }
+    </style>
+</head>
+<body class="text-slate-200 flex h-screen overflow-hidden">
+
+    <aside class="w-64 bg-slate-950 border-l border-slate-800 p-6 flex flex-col justify-between shrink-0">
+        <div>
+            <!-- شعار النظام الجديد -->
+            <div class="flex items-center gap-2 mb-8">
+                <span class="bg-emerald-500 text-slate-950 font-bold px-3 py-1 rounded-md text-lg">S</span>
+                <span class="font-bold text-xl text-white tracking-wide">SDLT</span>
+            </div>
+
+
+
+            <!-- الروابط والتنقل بين ملفات القوائم -->
+            <nav class="space-y-1 text-sm">
+                <a href="index.html" class="block bg-slate-900 text-emerald-400 font-medium px-4 py-2.5 rounded-xl border border-slate-800/60"> <i class="fa-solid fa-chart-simple ..."></i> <span>📊 لوحة التحكم</span></a>
+                <a href="routes.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⛓️ مصمم المسارات</a>
+                <a href="branches.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏢 الفروع والمخازن</a>
+                <a href="orders.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📦 الطلبات والتتبع</a>
+                <a href="clinics.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏥 العيادات والأطباء</a>
+                <a href="products.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">💎 المنتجات والتركيبات</a>
+                <a href="reports.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📈 التقارير والتحليلات</a>
+                <a href="admin.html" class="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition"><i class="fa-solid fa-users-gear ..."></i><span> تفعيل الحسابات </span></a>
+                <div class="space-y-1" id="adminMenuContainer">
+    <button onclick="toggleDropdown('usersDropdown', 'usersArrow')" class="w-full flex items-center justify-between p-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition text-sm border border-transparent hover:border-slate-700">
+        <div class="flex items-center gap-3">
+            <i class="fa-solid fa-user-shield w-5 text-center text-slate-400"></i>
+            <span>  المستخدمين </span>
+        </div>
+        <i id="usersArrow" class="fa-solid fa-chevron-left text-[10px] transition-transform duration-300"></i>
+    </button>
+
+    <div id="usersDropdown" class="hidden flex-col gap-3 pr-9 py-2 relative">
+        <div class="absolute right-[22px] top-0 bottom-4 w-px bg-slate-700"></div>
+
+        <a href="users.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            المستخدمين
+        </a>
+
+        <a href="roles.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-[#111827]"></div>
+            الأدوار والصلاحيات
+        </a>
+
+        <a href="permissions.html" class="relative text-emerald-400 hover:text-emerald-300 transition text-sm flex items-center font-bold">
+            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-emerald-500 border-2 border-[#111827] shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+            الصلاحيات
+        </a>
+    </div>
+</div>
+
+
+
+
+<script>
+    // دالة فتح وإغلاق القائمة المنسدلة
+    function toggleDropdown(dropdownId, arrowId) {
+        const dropdown = document.getElementById(dropdownId);
+        const arrow = document.getElementById(arrowId);
+        
+        if (dropdown.classList.contains('hidden')) {
+            dropdown.classList.remove('hidden');
+            dropdown.classList.add('flex');
+            arrow.style.transform = 'rotate(-90deg)'; // تدوير السهم للأسفل
+        } else {
+            dropdown.classList.add('hidden');
+            dropdown.classList.remove('flex');
+            arrow.style.transform = 'rotate(0deg)'; // إعادة السهم
+        }
+    }
+</script>
+
+
+
+                <a href="settings.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⚙️ إعدادات النظام</a>
+                <a href="#" onclick="logoutUser(event)" class="flex items-center gap-3 p-3 mt-4 text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition text-sm font-bold"><i class="fa-solid fa-arrow-right-from-bracket w-5 text-center"></i> <span>تسجيل الخروج</span></a>
+            </nav>
+            
+        </div>
+        <div class="text-xs text-slate-500 border-t border-slate-800 pt-4">
+            المستخدم النشط: <span class="text-slate-300 font-medium">عبدالعزيز الفيفي</span>
+        </div>
+    </aside>
+
+    <main class="flex-1 overflow-y-auto relative">
+        <header class="flex justify-between items-end px-8 py-8">
+            <button class="bg-emerald-500 hover:bg-emerald-400 text-[#0b1121] font-bold py-2.5 px-6 rounded-lg text-sm transition shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                إضافة مستخدم
+            </button>
+            <div class="text-left" dir="ltr">
+                <div class="text-xs text-slate-500 mb-2 flex items-center justify-end gap-2 font-mono">
+                    <span class="text-white">المستخدمين</span> <i class="fa-solid fa-chevron-left text-[10px]"></i> إعدادات المستخدمين
+                </div>
+                <h1 class="text-2xl font-bold text-white flex items-center justify-end gap-2">
+                    المستخدمين
+                </h1>
+            </div>
+        </header>
+
+        <div class="px-8 pb-8">
+            <div class="bg-[#111827] border border-slate-800 rounded-xl shadow-xl flex flex-col h-[calc(100vh-180px)]">
+                
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-[#151d2c] rounded-t-xl">
+                    <button class="text-slate-400 hover:text-white transition"><i class="fa-solid fa-bars"></i></button>
+                    <div class="relative">
+                        <input type="text" placeholder="بحث" class="bg-[#0b1121] border border-slate-700 text-slate-300 text-sm rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:border-emerald-500 w-64 text-right transition">
+                        <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-500"></i>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto">
+                    <table class="w-full text-right text-sm text-slate-300">
+                        <thead class="text-xs text-slate-400 bg-[#0f172a] border-b border-slate-800 sticky top-0 z-10">
+                            <tr>
+                                <th class="px-6 py-4 text-center w-48 font-bold">الإجراءات</th>
+                                <th class="px-6 py-4 text-center font-bold">الأدوار</th>
+                                <th class="px-6 py-4 text-center font-bold">الفروع</th>
+                                <th class="px-6 py-4 font-bold">البريد الإلكتروني</th>
+                                <th class="px-6 py-4 font-bold">الاسم</th>
+                                <th class="px-6 py-4 w-12 text-center"><input type="checkbox"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody" class="divide-y divide-slate-800/50">
+                            <tr><td colspan="6" class="text-center py-8 text-slate-500">جاري تحميل المستخدمين...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="p-4 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400 bg-[#151d2c] rounded-b-xl">
+                    <div class="flex items-center gap-2">
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white transition"><i class="fa-solid fa-chevron-right"></i></button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition">1</button>
+                        <button class="w-8 h-8 flex items-center justify-center rounded bg-slate-800 hover:bg-slate-700 text-white transition"><i class="fa-solid fa-chevron-left"></i></button>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span>لكل صفحة</span>
+                        <select class="bg-[#0b1121] border border-slate-700 rounded p-1 outline-none text-white">
+                            <option>10</option>
+                            <option>20</option>
+                        </select>
+                    </div>
+                    <div id="usersCount">عرض 0 نتيجة</div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script> 
+    
+    <script>
+        function toggleDropdown(dropdownId, arrowId) {
+            const dropdown = document.getElementById(dropdownId);
+            const arrow = document.getElementById(arrowId);
+            if (dropdown.classList.contains('hidden')) {
+                dropdown.classList.remove('hidden'); dropdown.classList.add('flex');
+                arrow.style.transform = 'rotate(-90deg)';
+            } else {
+                dropdown.classList.add('hidden'); dropdown.classList.remove('flex');
+                arrow.style.transform = 'rotate(0deg)';
+            }
+        }
+
+        async function fetchUsers() {
+            // جلب البيانات من جدول profiles مع جلب اسم الدور المرتبط به من جدول roles
+            const { data, error } = await db
+                .from('profiles')
+                .select(`
+                    id, 
+                    full_name, 
+                    email, 
+                    roles (name_en)
+                `);
+
+            const tbody = document.getElementById('usersTableBody');
+            const countLabel = document.getElementById('usersCount');
+
+            if (error) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-rose-500">حدث خطأ: ${error.message}</td></tr>`;
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-500">لا يوجد مستخدمين مسجلين</td></tr>`;
+                return;
+            }
+
+            countLabel.innerText = `عرض 1 إلى ${data.length} من ${data.length} نتيجة`;
+
+            tbody.innerHTML = data.map(user => {
+                // تحديد الدور؛ إذا لم يكن له دور نضع "بدون دور"
+                const roleName = user.roles ? user.roles.name_en : 'pending';
+                
+                return `
+                <tr class="hover:bg-slate-800/30 transition group">
+                    <td class="px-6 py-4 text-center">
+                        <div class="flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button class="text-emerald-500 hover:text-emerald-400 text-xs font-bold flex items-center gap-1"><i class="fa-solid fa-pen-to-square"></i> تعديل</button>
+                            <button class="text-rose-500 hover:text-rose-400 text-xs font-bold flex items-center gap-1"><i class="fa-solid fa-trash"></i> حذف</button>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="bg-emerald-900/40 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded text-xs font-mono">${roleName}</span>
+                    </td>
+                    <td class="px-6 py-4 text-center">
+                        <span class="bg-emerald-900/40 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded text-xs font-mono">الفرع الرئيسي</span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-400 text-xs font-mono">${user.email || 'غير متوفر'}</td>
+                    <td class="px-6 py-4 text-white text-sm">${user.full_name || 'مستخدم'}</td>
+                    <td class="px-6 py-4 text-center"><input type="checkbox"></td>
+                </tr>
+            `}).join('');
+        }
+
+        window.addEventListener('load', fetchUsers);
+    </script>
+</body>
+</html>

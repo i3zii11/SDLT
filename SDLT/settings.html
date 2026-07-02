@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDLT - إعدادات النظام</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+
+        /* التبويبات */
+        .settings-tab { transition: all 0.2s ease; }
+        .settings-tab.active {
+            background: #10b981;
+            color: #0f172a;
+            font-weight: 700;
+        }
+
+        /* مؤشر الحفظ */
+        #saveIndicator { transition: opacity 0.5s ease; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex">
+
+    <!-- ══════════════════════════════════════
+         القائمة الجانبية الموحدة
+    ══════════════════════════════════════ -->
+    <aside class="w-64 bg-slate-950 border-l border-slate-800 p-6 flex flex-col justify-between shrink-0">
+        <div>
+            <div class="flex items-center gap-2 mb-8">
+                <span class="bg-emerald-500 text-slate-950 font-bold px-3 py-1 rounded-md text-lg">S</span>
+                <span class="font-bold text-xl text-white tracking-wide">SDLT</span>
+            </div>
+            <nav class="space-y-1 text-sm">
+                <a href="index.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📊 لوحة التحكم</a>
+                <a href="routes.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">⛓️ مصمم المسارات</a>
+                <a href="branches.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏢 الفروع والمخازن</a>
+                <a href="orders.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📦 الطلبات والتتبع</a>
+                <a href="clinics.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">🏥 العيادات والأطباء</a>
+                <a href="products.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">💎 المنتجات والتركيبات</a>
+                <a href="reports.html" class="block text-slate-400 hover:text-white hover:bg-slate-900/40 px-4 py-2.5 rounded-xl transition-all">📈 التقارير والتحليلات</a>
+                <a href="admin.html" class="flex items-center gap-3 p-3 text-slate-400 hover:bg-slate-800 rounded-lg transition">
+                    <i class="fa-solid fa-users-gear"></i><span> تفعيل الحسابات </span>
+                </a>
+                <div class="space-y-1">
+                    <button onclick="toggleDropdown('usersDropdown','usersArrow')" class="w-full flex items-center justify-between p-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition text-sm">
+                        <div class="flex items-center gap-3">
+                            <i class="fa-solid fa-user-shield w-5 text-center"></i>
+                            <span>المستخدمين</span>
+                        </div>
+                        <i id="usersArrow" class="fa-solid fa-chevron-left text-[10px] transition-transform duration-300"></i>
+                    </button>
+                    <div id="usersDropdown" class="hidden flex-col gap-3 pr-9 py-2 relative">
+                        <div class="absolute right-[22px] top-0 bottom-4 w-px bg-slate-700"></div>
+                        <a href="users.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+                            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-slate-900"></div>المستخدمين
+                        </a>
+                        <a href="roles.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+                            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-slate-900"></div>الأدوار والصلاحيات
+                        </a>
+                        <a href="permissions.html" class="relative text-slate-400 hover:text-white transition text-sm flex items-center">
+                            <div class="absolute -right-[17px] w-2 h-2 rounded-full bg-slate-600 border-2 border-slate-900"></div>الصلاحيات
+                        </a>
+                    </div>
+                </div>
+                <a href="settings.html" class="block bg-slate-900 text-emerald-400 font-medium px-4 py-2.5 rounded-xl border border-slate-800/60">⚙️ إعدادات النظام</a>
+                <a href="#" onclick="logoutUser(event)" class="flex items-center gap-3 p-3 mt-4 text-rose-400 hover:text-white hover:bg-rose-500/20 border border-rose-500/20 rounded-lg transition text-sm font-bold">
+                    <i class="fa-solid fa-arrow-right-from-bracket w-5 text-center"></i><span>تسجيل الخروج</span>
+                </a>
+            </nav>
+        </div>
+        <div class="text-xs text-slate-500 border-t border-slate-800 pt-4">
+            المستخدم النشط: <span id="sidebarUserName" class="text-slate-300 font-medium">...</span>
+        </div>
+    </aside>
+
+    <!-- ══════════════════════════════════════
+         المحتوى الرئيسي
+    ══════════════════════════════════════ -->
+    <main class="flex-1 p-8 overflow-y-auto h-screen">
+
+        <!-- الهيدر -->
+        <header class="mb-8 flex justify-between items-start">
+            <div>
+                <h1 class="text-2xl font-bold text-white">إعدادات النظام</h1>
+                <p class="text-slate-400 text-sm mt-1">تخصيص المعمل وضبط الإعدادات التشغيلية</p>
+            </div>
+            <!-- مؤشر الحفظ -->
+            <div id="saveIndicator" class="opacity-0 flex items-center gap-2 text-emerald-400 text-sm bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl">
+                <i class="fa-solid fa-check-circle"></i> تم الحفظ بنجاح
+            </div>
+        </header>
+
+        <!-- تبويبات الإعدادات -->
+        <div class="flex gap-1 bg-slate-950 border border-slate-800 rounded-2xl p-1.5 mb-6 w-fit">
+            <button onclick="switchTab('lab')"           class="settings-tab active text-xs px-4 py-2 rounded-xl" id="tab-lab">🏢 معلومات المعمل</button>
+            <button onclick="switchTab('sla')"           class="settings-tab text-slate-400 text-xs px-4 py-2 rounded-xl" id="tab-sla">⏱️ إعدادات SLA</button>
+            <button onclick="switchTab('workflow')"      class="settings-tab text-slate-400 text-xs px-4 py-2 rounded-xl" id="tab-workflow">🔁 الإجراءات التشغيلية</button>
+            <button onclick="switchTab('notifications')" class="settings-tab text-slate-400 text-xs px-4 py-2 rounded-xl" id="tab-notifications">🔔 الإشعارات</button>
+            <button onclick="switchTab('system')"        class="settings-tab text-slate-400 text-xs px-4 py-2 rounded-xl" id="tab-system">🛡️ النظام والأمان</button>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             تبويب 1: معلومات المعمل
+        ══════════════════════════════════════ -->
+        <div id="panel-lab" class="settings-panel space-y-6">
+
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-white font-bold text-sm mb-5 flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-building text-emerald-500"></i> هوية المعمل
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">اسم المعمل <span class="text-rose-500">*</span></label>
+                        <input type="text" id="labName" placeholder="مثال: معمل أسنان الخبراء"
+                               class="input-field w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">رقم السجل التجاري</label>
+                        <input type="text" id="labCr" placeholder="1234567890"
+                               class="input-field w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">رقم الجوال</label>
+                        <input type="text" id="labPhone" placeholder="05xxxxxxxx"
+                               class="input-field w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">البريد الإلكتروني</label>
+                        <input type="email" id="labEmail" placeholder="info@lab.com"
+                               class="input-field w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-xs text-slate-400 block mb-1.5">العنوان</label>
+                        <input type="text" id="labAddress" placeholder="المدينة، الحي، رقم المبنى..."
+                               class="input-field w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-xs text-slate-400 block mb-1.5">ملاحظة تظهر في الباركود والتقارير</label>
+                        <input type="text" id="labTagline" placeholder="مثال: جودة وثقة منذ 2010"
+                               class="input-field w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-white font-bold text-sm mb-5 flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-clock text-emerald-500"></i> ساعات العمل
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">وقت الافتتاح</label>
+                        <input type="time" id="labOpenTime" value="08:00"
+                               class="input-field w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">وقت الإغلاق</label>
+                        <input type="time" id="labCloseTime" value="17:00"
+                               class="input-field w-full bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-xs text-slate-400 block mb-2">أيام الإجازة الأسبوعية</label>
+                        <div class="flex gap-2 flex-wrap" id="offDaysContainer">
+                            <!-- تُبنى ديناميكياً بالـ JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="saveSettings('lab')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-8 py-2.5 rounded-xl text-sm transition-all shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> حفظ معلومات المعمل
+                </button>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             تبويب 2: إعدادات SLA
+        ══════════════════════════════════════ -->
+        <div id="panel-sla" class="settings-panel hidden space-y-6">
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-white font-bold text-sm mb-1 flex items-center gap-2">
+                    <i class="fa-solid fa-stopwatch text-emerald-500"></i> أوقات إنجاز الطلبات (SLA)
+                </h2>
+                <p class="text-xs text-slate-500 mb-5">حدد الوقت الأقصى المسموح به لكل نوع طلب قبل أن يُعتبر متجاوزاً للـ SLA.</p>
+
+                <div class="space-y-3" id="slaRulesList">
+                    <!-- تُبنى ديناميكياً -->
+                </div>
+
+                <button onclick="addSlaRule()" class="mt-4 w-full border border-dashed border-slate-700 hover:border-emerald-500 text-slate-500 hover:text-emerald-400 py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-plus"></i> إضافة قاعدة SLA جديدة
+                </button>
+            </div>
+
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-white font-bold text-sm mb-5 flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> تنبيهات الاقتراب من SLA
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">تنبيه عند بلوغ (%)</label>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="slaWarnPercent" min="50" max="99" value="80"
+                                   class="input-field w-24 bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 focus:border-emerald-500 outline-none text-center">
+                            <span class="text-slate-500 text-xs">% من وقت SLA</span>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1.5">لون التنبيه في لوحة التحكم</label>
+                        <select id="slaWarnColor" class="bg-slate-900 border border-slate-700 rounded-xl p-2.5 text-sm text-slate-200 outline-none focus:border-emerald-500">
+                            <option value="amber">أصفر / تحذيري</option>
+                            <option value="orange">برتقالي</option>
+                            <option value="rose">أحمر</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="saveSettings('sla')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-8 py-2.5 rounded-xl text-sm transition-all shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> حفظ إعدادات SLA
+                </button>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             تبويب 3: الإجراءات التشغيلية
+        ══════════════════════════════════════ -->
+        <div id="panel-workflow" class="settings-panel hidden space-y-6">
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-white font-bold text-sm mb-5 flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-gears text-emerald-500"></i> إعدادات الطلبات
+                </h2>
+                <div class="space-y-4">
+                    <!-- توقيع رقم الطلب -->
+                    <div class="flex justify-between items-center p-4 bg-slate-900 rounded-xl border border-slate-800">
+                        <div>
+                            <div class="text-sm text-white font-medium">بادئة رقم الطلب</div>
+                            <div class="text-xs text-slate-500 mt-0.5">تظهر قبل الرقم في الباركود والتقارير</div>
+                        </div>
+                        <input type="text" id="orderPrefix" value="SDLT" maxlength="6"
+                               class="input-field w-24 bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-emerald-400 font-mono text-center outline-none focus:border-emerald-500">
+                    </div>
+
+                    <!-- الحذف التلقائي -->
+                    <div class="flex justify-between items-center p-4 bg-slate-900 rounded-xl border border-slate-800">
+                        <div>
+                            <div class="text-sm text-white font-medium">أرشفة الطلبات المكتملة تلقائياً</div>
+                            <div class="text-xs text-slate-500 mt-0.5">إخفاء الطلبات بعد اكتمالها من لوحة التحكم الرئيسية</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="autoArchive" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- الموافقة قبل الحذف -->
+                    <div class="flex justify-between items-center p-4 bg-slate-900 rounded-xl border border-slate-800">
+                        <div>
+                            <div class="text-sm text-white font-medium">طلب تأكيد مزدوج عند الحذف</div>
+                            <div class="text-xs text-slate-500 mt-0.5">إضافة خطوة تأكيد إضافية قبل حذف أي طلب</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="doubleConfirmDelete" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- عدد أيام التسليم الافتراضي -->
+                    <div class="flex justify-between items-center p-4 bg-slate-900 rounded-xl border border-slate-800">
+                        <div>
+                            <div class="text-sm text-white font-medium">عدد أيام التسليم الافتراضية</div>
+                            <div class="text-xs text-slate-500 mt-0.5">تُضاف تلقائياً عند إنشاء طلب جديد</div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="number" id="defaultDeliveryDays" value="7" min="1" max="30"
+                                   class="input-field w-16 bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-emerald-400 font-mono text-center outline-none focus:border-emerald-500">
+                            <span class="text-slate-500 text-xs">يوم</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="saveSettings('workflow')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-8 py-2.5 rounded-xl text-sm transition-all shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> حفظ الإجراءات
+                </button>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             تبويب 4: الإشعارات
+        ══════════════════════════════════════ -->
+        <div id="panel-notifications" class="settings-panel hidden space-y-6">
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-white font-bold text-sm mb-5 flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-bell text-emerald-500"></i> إعدادات الإشعارات
+                </h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-4 bg-slate-900 rounded-xl border border-slate-800">
+                        <div>
+                            <div class="text-sm text-white font-medium">إشعار عند استلام طلب جديد</div>
+                            <div class="text-xs text-slate-500">يُرسل لمدير المعمل عند كل طلب وارد</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="notifyNewOrder" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between items-center p-4 bg-slate-900 rounded-xl border border-slate-800">
+                        <div>
+                            <div class="text-sm text-white font-medium">إشعار تجاوز SLA</div>
+                            <div class="text-xs text-slate-500">تنبيه عند تجاوز أي طلب وقت الإنجاز المحدد</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="notifySla" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between items-center p-4 bg-slate-900 rounded-xl border border-slate-800">
+                        <div>
+                            <div class="text-sm text-white font-medium">إشعار اكتمال الطلب</div>
+                            <div class="text-xs text-slate-500">إشعار الطبيب/العيادة عند الانتهاء من الطلب</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="notifyComplete" class="sr-only peer">
+                            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between items-center p-4 bg-slate-900 rounded-xl border border-slate-800">
+                        <div>
+                            <div class="text-sm text-white font-medium">تسجيل مستخدم جديد يحتاج تفعيل</div>
+                            <div class="text-xs text-slate-500">إشعار الأدمن عند أي حساب بانتظار المراجعة</div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="notifyNewUser" class="sr-only peer" checked>
+                            <div class="w-11 h-6 bg-slate-700 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end">
+                <button onclick="saveSettings('notifications')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-8 py-2.5 rounded-xl text-sm transition-all shadow-lg flex items-center gap-2">
+                    <i class="fa-solid fa-cloud-arrow-up"></i> حفظ إعدادات الإشعارات
+                </button>
+            </div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             تبويب 5: النظام والأمان
+        ══════════════════════════════════════ -->
+        <div id="panel-system" class="settings-panel hidden space-y-6">
+
+            <!-- معلومات النظام -->
+            <div class="bg-slate-950 border border-slate-800 rounded-2xl p-6">
+                <h2 class="text-white font-bold text-sm mb-5 flex items-center gap-2 border-b border-slate-800 pb-3">
+                    <i class="fa-solid fa-server text-emerald-500"></i> معلومات النظام
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
+                        <div class="text-xs text-slate-500 mb-1">إصدار النظام</div>
+                        <div class="text-emerald-400 font-mono font-bold text-sm">v1.0.0</div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
+                        <div class="text-xs text-slate-500 mb-1">حالة قاعدة البيانات</div>
+                        <div id="dbStatus" class="text-slate-400 font-bold text-sm">فحص...</div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
+                        <div class="text-xs text-slate-500 mb-1">إجمالي الطلبات</div>
+                        <div id="totalOrdersCount" class="text-white font-mono font-bold text-sm">-</div>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 text-center">
+                        <div class="text-xs text-slate-500 mb-1">إجمالي المستخدمين</div>
+                        <div id="totalUsersCount" class="text-white font-mono font-bold text-sm">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- منطقة الخطر -->
+            <div class="bg-slate-950 border border-rose-500/20 rounded-2xl p-6">
+                <h2 class="text-rose-400 font-bold text-sm mb-5 flex items-center gap-2 border-b border-rose-500/20 pb-3">
+                    <i class="fa-solid fa-triangle-exclamation"></i> منطقة الخطر
+                </h2>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center p-4 bg-rose-500/5 rounded-xl border border-rose-500/10">
+                        <div>
+                            <div class="text-sm text-white font-medium">تصدير كل البيانات</div>
+                            <div class="text-xs text-slate-500">تنزيل نسخة كاملة من قاعدة البيانات بصيغة JSON</div>
+                        </div>
+                        <button onclick="exportAllData()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 px-4 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-arrow-down"></i> تصدير
+                        </button>
+                    </div>
+                    <div class="flex justify-between items-center p-4 bg-rose-500/5 rounded-xl border border-rose-500/10">
+                        <div>
+                            <div class="text-sm text-rose-400 font-medium">حذف كل الطلبات المكتملة</div>
+                            <div class="text-xs text-slate-500">⚠️ لا يمكن التراجع عن هذا الإجراء</div>
+                        </div>
+                        <button onclick="purgeCompletedOrders()" class="bg-rose-500/10 hover:bg-rose-500 border border-rose-500/30 text-rose-400 hover:text-white px-4 py-2 rounded-lg text-xs transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-trash"></i> حذف نهائي
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ══════════════════════════════════════
+         JavaScript
+    ══════════════════════════════════════ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="app.js"></script>
+
+    <script>
+        // ══════════════════════════════════════════════════════
+        // الحالة العامة للإعدادات
+        // ══════════════════════════════════════════════════════
+        let settingsData = {}; // الإعدادات المحملة من قاعدة البيانات
+        let slaRules = [
+            { type: 'تاج وتلبيسة', hours: 48 },
+            { type: 'جسر',         hours: 72 },
+            { type: 'فينير',       hours: 96 },
+        ];
+        const OFF_DAYS = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+        // ══════════════════════════════════════════════════════
+        // التهيئة
+        // ══════════════════════════════════════════════════════
+        window.addEventListener('load', async () => {
+            buildOffDaysSelector();
+            renderSlaRules();
+            await loadSettings();
+            await loadSystemStats();
+        });
+
+        // ══════════════════════════════════════════════════════
+        // التبويبات
+        // ══════════════════════════════════════════════════════
+        function switchTab(tabName) {
+            document.querySelectorAll('.settings-tab').forEach(t => {
+                t.classList.remove('active');
+                t.classList.add('text-slate-400');
+            });
+            document.querySelectorAll('.settings-panel').forEach(p => p.classList.add('hidden'));
+
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+            document.getElementById(`tab-${tabName}`).classList.remove('text-slate-400');
+            document.getElementById(`panel-${tabName}`).classList.remove('hidden');
+        }
+
+        // ══════════════════════════════════════════════════════
+        // أيام الإجازة
+        // ══════════════════════════════════════════════════════
+        function buildOffDaysSelector() {
+            const container = document.getElementById('offDaysContainer');
+            container.innerHTML = OFF_DAYS.map((day, i) => `
+                <label class="flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" class="off-day-check accent-emerald-500" value="${i}" ${i === 4 || i === 5 ? 'checked' : ''}>
+                    <span class="text-xs text-slate-400">${day}</span>
+                </label>
+            `).join('');
+        }
+
+        function getOffDays() {
+            return Array.from(document.querySelectorAll('.off-day-check:checked')).map(c => Number(c.value));
+        }
+
+        function setOffDays(days = []) {
+            document.querySelectorAll('.off-day-check').forEach(c => {
+                c.checked = days.includes(Number(c.value));
+            });
+        }
+
+        // ══════════════════════════════════════════════════════
+        // قواعد SLA
+        // ══════════════════════════════════════════════════════
+        function renderSlaRules() {
+            const container = document.getElementById('slaRulesList');
+            container.innerHTML = slaRules.map((rule, i) => `
+                <div class="flex items-center gap-3 p-3 bg-slate-900 rounded-xl border border-slate-800">
+                    <input type="text" value="${rule.type}" onchange="slaRules[${i}].type = this.value"
+                           class="flex-1 bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-slate-200 outline-none focus:border-emerald-500"
+                           placeholder="نوع التركيبة">
+                    <div class="flex items-center gap-2 shrink-0">
+                        <input type="number" value="${rule.hours}" min="1" onchange="slaRules[${i}].hours = Number(this.value)"
+                               class="w-20 bg-slate-800 border border-slate-700 rounded-lg p-2 text-sm text-emerald-400 font-mono text-center outline-none focus:border-emerald-500">
+                        <span class="text-xs text-slate-500">ساعة</span>
+                    </div>
+                    <button onclick="removeSlaRule(${i})" class="text-rose-400 hover:text-rose-300 text-xs px-2 py-1 rounded bg-rose-500/10 border border-rose-500/10">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addSlaRule() {
+            slaRules.push({ type: '', hours: 48 });
+            renderSlaRules();
+        }
+
+        function removeSlaRule(index) {
+            slaRules.splice(index, 1);
+            renderSlaRules();
+        }
+
+        // ══════════════════════════════════════════════════════
+        // جلب الإعدادات من Supabase
+        // ══════════════════════════════════════════════════════
+        async function loadSettings() {
+            try {
+                const { data, error } = await db.from('system_settings').select('*').single();
+                if (error && error.code !== 'PGRST116') throw error; // PGRST116 = لا توجد صفوف (جدول فارغ)
+                if (!data) return;
+
+                settingsData = data;
+                // تعبئة حقول معلومات المعمل
+                setField('labName',            data.lab_name);
+                setField('labCr',              data.lab_cr);
+                setField('labPhone',           data.lab_phone);
+                setField('labEmail',           data.lab_email);
+                setField('labAddress',         data.lab_address);
+                setField('labTagline',         data.lab_tagline);
+                setField('labOpenTime',        data.open_time || '08:00');
+                setField('labCloseTime',       data.close_time || '17:00');
+                // أيام الإجازة
+                if (data.off_days) setOffDays(JSON.parse(data.off_days));
+                // SLA
+                if (data.sla_rules)   { slaRules = JSON.parse(data.sla_rules); renderSlaRules(); }
+                if (data.sla_warn)    setField('slaWarnPercent', data.sla_warn);
+                // الإجراءات
+                if (data.order_prefix) setField('orderPrefix', data.order_prefix);
+                if (data.auto_archive) setCheck('autoArchive', data.auto_archive);
+                // الإشعارات
+                if (data.notify_new_order)  setCheck('notifyNewOrder',  data.notify_new_order);
+                if (data.notify_sla)        setCheck('notifySla',        data.notify_sla);
+                if (data.notify_complete)   setCheck('notifyComplete',   data.notify_complete);
+                if (data.notify_new_user)   setCheck('notifyNewUser',    data.notify_new_user);
+
+            } catch (err) {
+                console.error("خطأ في جلب الإعدادات:", err);
+            }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // حفظ الإعدادات في Supabase
+        // ══════════════════════════════════════════════════════
+        async function saveSettings(section) {
+            const btn = event.target.closest('button');
+            const origText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> جاري الحفظ...';
+
+            try {
+                const payload = buildPayload(section);
+
+                // upsert: إدخال إذا لم يوجد صف، أو تحديث إذا وجد
+                const { error } = await db.from('system_settings')
+                    .upsert([{ id: 1, ...payload }], { onConflict: 'id' });
+
+                if (error) throw error;
+
+                showSaveIndicator();
+            } catch (err) {
+                console.error("خطأ في الحفظ:", err);
+                alert("تعذر الحفظ: " + (err.message || 'تحقق من الاتصال'));
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = origText;
+            }
+        }
+
+        function buildPayload(section) {
+            const p = {};
+            if (section === 'lab') {
+                p.lab_name    = getField('labName');
+                p.lab_cr      = getField('labCr');
+                p.lab_phone   = getField('labPhone');
+                p.lab_email   = getField('labEmail');
+                p.lab_address = getField('labAddress');
+                p.lab_tagline = getField('labTagline');
+                p.open_time   = getField('labOpenTime');
+                p.close_time  = getField('labCloseTime');
+                p.off_days    = JSON.stringify(getOffDays());
+            }
+            if (section === 'sla') {
+                p.sla_rules = JSON.stringify(slaRules);
+                p.sla_warn  = Number(getField('slaWarnPercent'));
+            }
+            if (section === 'workflow') {
+                p.order_prefix    = getField('orderPrefix');
+                p.auto_archive    = getCheck('autoArchive');
+                p.double_confirm  = getCheck('doubleConfirmDelete');
+                p.default_delivery_days = Number(getField('defaultDeliveryDays'));
+            }
+            if (section === 'notifications') {
+                p.notify_new_order  = getCheck('notifyNewOrder');
+                p.notify_sla        = getCheck('notifySla');
+                p.notify_complete   = getCheck('notifyComplete');
+                p.notify_new_user   = getCheck('notifyNewUser');
+            }
+            return p;
+        }
+
+        // ══════════════════════════════════════════════════════
+        // إحصائيات النظام
+        // ══════════════════════════════════════════════════════
+        async function loadSystemStats() {
+            try {
+                const [ordersRes, usersRes] = await Promise.all([
+                    db.from('orders').select('id', { count: 'exact', head: true }),
+                    db.from('profiles').select('id', { count: 'exact', head: true })
+                ]);
+
+                document.getElementById('dbStatus').innerHTML =
+                    `<span class="text-emerald-400">✅ متصلة</span>`;
+                document.getElementById('totalOrdersCount').innerText =
+                    ordersRes.count ?? '-';
+                document.getElementById('totalUsersCount').innerText =
+                    usersRes.count ?? '-';
+            } catch (err) {
+                document.getElementById('dbStatus').innerHTML =
+                    `<span class="text-rose-400">❌ خطأ</span>`;
+            }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // منطقة الخطر
+        // ══════════════════════════════════════════════════════
+        async function exportAllData() {
+            try {
+                const { data } = await db.from('orders').select('*');
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url  = URL.createObjectURL(blob);
+                const a    = document.createElement('a');
+                a.href     = url;
+                a.download = `sdlt-export-${new Date().toISOString().split('T')[0]}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (err) {
+                alert("فشل التصدير: " + err.message);
+            }
+        }
+
+        async function purgeCompletedOrders() {
+            const conf1 = confirm('سيتم حذف جميع الطلبات المكتملة نهائياً. هل أنت متأكد؟');
+            if (!conf1) return;
+            const conf2 = confirm('⚠️ تأكيد أخير: لا يمكن استرجاع البيانات بعد الحذف. متأكد؟');
+            if (!conf2) return;
+            try {
+                const { error } = await db.from('orders').delete().eq('status', 'مكتمل');
+                if (error) throw error;
+                alert('✅ تم حذف جميع الطلبات المكتملة.');
+                loadSystemStats();
+            } catch (err) {
+                alert("فشل الحذف: " + err.message);
+            }
+        }
+
+        // ══════════════════════════════════════════════════════
+        // دوال مساعدة
+        // ══════════════════════════════════════════════════════
+        function setField(id, val) {
+            const el = document.getElementById(id);
+            if (el && val !== undefined && val !== null) el.value = val;
+        }
+        function getField(id) {
+            return document.getElementById(id)?.value || '';
+        }
+        function setCheck(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.checked = Boolean(val);
+        }
+        function getCheck(id) {
+            return document.getElementById(id)?.checked || false;
+        }
+
+        function showSaveIndicator() {
+            const ind = document.getElementById('saveIndicator');
+            ind.style.opacity = '1';
+            setTimeout(() => { ind.style.opacity = '0'; }, 3000);
+        }
+
+        // القائمة المنسدلة للمستخدمين في السايدبار
+        function toggleDropdown(id, arrowId) {
+            const el    = document.getElementById(id);
+            const arrow = document.getElementById(arrowId);
+            const isHidden = el.classList.contains('hidden');
+            el.classList.toggle('hidden', !isHidden);
+            el.classList.toggle('flex', isHidden);
+            if (arrow) arrow.style.transform = isHidden ? 'rotate(-90deg)' : 'rotate(0)';
+        }
+    </script>
+</body>
+</html>
